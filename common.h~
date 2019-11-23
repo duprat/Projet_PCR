@@ -24,9 +24,9 @@
 
 #include "calcul.h"
 
-#define N 280
+#define N 100
 
-char NOM_PRGRM[N];
+char NOM_PRGRM[100];
 
 /** 
 * les structures union fonctionnent sur le principe 
@@ -40,8 +40,14 @@ union sem_union{
 };
 
 /**
-* Pour la gestion multithreadee
+* compteur permet l'initialisation du numero du processus
+* numDestruct permet de terminer le programme de manière propre
 **/
+struct manip{
+    int cptrProcess;
+};
+
+
 struct infosClient{
     int socketClient;
     int posClient;
@@ -53,14 +59,15 @@ struct infosClient{
 * veut a l'interieur, en TCP et UDP
 **/
 struct message{
-    char pseudo[N];
+    int ping;
+    int pong;
     char message[N];
 };
 
-struct memoirePartagee{
-    int position;
-    struct message;
-    struct * memoirePartagee;
+struct recept{
+    int socket;
+    struct sockaddr * addrServeur;
+    struct message *  messageReception;
 };
 
 /**
