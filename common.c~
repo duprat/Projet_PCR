@@ -29,7 +29,7 @@ int init_shm(key_t key, size_t size){
     return shm_id;
 }
 
-struct memoirePartagee * attachement(int shm_id){
+struct manip * attachement(int shm_id){
     struct manip * shm_addr = NULL;
     errno = 0;
     shm_addr = shmat(shm_id, NULL, 0);
@@ -237,11 +237,10 @@ void showAddress(struct sockaddr * address){
 /**
 * receptionne les message en provenance de socket
 * caster le type du message en char * et inversement
-* \return -1: erreur 0: socket fermee 1: tout s'est bien passe
+* retourne le nombre d'octets recus au total
 **/
-int receptionTCP(int socket,char * message){
+int receptionTCP(int socket,char * message, long int taille){
     int index = 0;
-    long int taille = sizeof(message);
     do{
         int tempRCV = 0;
         taille -= index;
@@ -264,9 +263,8 @@ int receptionTCP(int socket,char * message){
 * caster le type du message en char * et inversement
 * \return -1: erreur 0: socket fermee 1: tout s'est bien passe
 **/
-int envoieTCP(int socket, char * message){
+int envoieTCP(int socket, char * message, long int taille){
     int index = 0;
-    long int taille = sizeof(message);
     do{
         int tempRCV = 0;
         taille -= index;

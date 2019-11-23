@@ -54,13 +54,13 @@ struct infosClient{
 **/
 struct message{
     char pseudo[N];
-    char message[N];
+    char text[N];
 };
 
 struct memoirePartagee{
     int position;
-    struct message;
-    struct * memoirePartagee;
+    struct message * commentaire;
+    struct memoirePartagee * suivant;
 };
 
 /**
@@ -78,9 +78,9 @@ int init_shm(key_t key, size_t size);
 /** *****************************************************************
 * Permet a un processus de s'attacher a une zone de memoire partagee
 *          --> Modifier le type de retour en fonction <--
-*             --> de ce que l'on veut manipuler <--
+*          --> du type de ce que l'on veut manipuler <--
 ****************************************************************** **/
-struct manip * attachement(int shm_id);
+struct memoirePartagee * attachement(int shm_id);
 
 /** 
 * Detache le processus courant de la zone de memoire 
@@ -156,16 +156,16 @@ void showAddress(struct sockaddr * address);
 /**
 * receptionne les message en provenance de socket
 * caster le type du message en char * et inversement
-* retourne le nombre d'octets recus au total
+* \return -1: erreur 0: socket fermee 1: tout s'est bien passe
 **/
-int receptionTCP(int socket,char * message, long int taille);
+int receptionTCP(int socket,char * message);
 
 /**
 * Envoie message vers socket
 * caster le type du message en char * et inversement
 * \return -1: erreur 0: socket fermee 1: tout s'est bien passe
 **/
-int envoieTCP(int socket, char * message, long int taille);
+int envoieTCP(int socket, char * message);
 
 /** 
  * Permet d'effectuer un fgets et d'en supprimer 
