@@ -1,10 +1,10 @@
 #include "common.h"
 
-key_t getKey(char * pathname, int myInt){
+key_t getKey(int myInt){
     key_t myKey;
     // Recuperation de la clef
     errno = 0;
-    myKey = ftok(pathname,myInt);
+    myKey = ftok(".",myInt);
 
     if( errno != 0){
         perror("Error FTOK ");
@@ -30,7 +30,7 @@ int init_shm(key_t key, size_t size){
 }
 
 struct memoirePartagee * attachement(int shm_id){
-    struct manip * shm_addr = NULL;
+    struct memoirePartagee * shm_addr = NULL;
     errno = 0;
     shm_addr = shmat(shm_id, NULL, 0);
 
