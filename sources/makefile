@@ -6,8 +6,7 @@ client: client.c
 serveur: serveur.c 
 	gcc serveur.c common.o -o serveur -Wall -lpthread
 
-clean:	
-	./destruction
+clean:
 	rm  serveur client
 	clear
 				
