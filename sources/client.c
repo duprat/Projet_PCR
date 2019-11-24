@@ -158,4 +158,3 @@ int main(int argc, char** argv) {
     free(adresse_Serveur);
     free(threadReception);
 }
-
