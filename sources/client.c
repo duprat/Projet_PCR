@@ -1,4 +1,3 @@
-<<<<<<< Updated upstream
 #include "common.h"
 
 int position;
@@ -159,18 +158,3 @@ int main(int argc, char** argv) {
     free(adresse_Serveur);
     free(threadReception);
 }
-
-=======
-#include <stdio.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netinet/ip.h>
-#include <unistd.h>
-#include <stdlib.h>
-
-int main(int argc, char* argv[]){
-
-    return 0;
-}
->>>>>>> Stashed changes
