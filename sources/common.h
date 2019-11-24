@@ -53,6 +53,7 @@ struct infosClient{
 * veut a l'interieur, en TCP et UDP
 **/
 struct message{
+    int numero;
     char pseudo[N];
     char text[N];
 };
@@ -67,7 +68,7 @@ struct memoirePartagee{
 * renvoie une clef en fonction d'un fichier
 * et d'un entier
 **/
-key_t getKey(char * pathname, int myInt);
+key_t getKey(int myInt);
 
 /**
 * Initialise une zone de memoire partagee
@@ -154,14 +155,14 @@ int creerSocket(int domaine, int type, int port);
 void showAddress(struct sockaddr * address);
  
 /**
-* receptionne les message en provenance de socket
+* receptionne les message via la socket locale
 * caster le type du message en char * et inversement
 * \return -1: erreur 0: socket fermee 1: tout s'est bien passe
 **/
 int receptionTCP(int socket,char * message);
 
 /**
-* Envoie message vers socket
+* Envoie message depuis via la socket locale
 * caster le type du message en char * et inversement
 * \return -1: erreur 0: socket fermee 1: tout s'est bien passe
 **/
