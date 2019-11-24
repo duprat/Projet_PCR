@@ -9,13 +9,14 @@ then
 fi
 
 gcc destruction.c -o destruction
+
 make
 
-xterm -T "Serveur" -e "./serveur --port $1; bash" &
+xterm -T "Serveur" -e "./serveur $1; bash" &
 sleep 3s
 
 for i in $(seq 1 $3)
 do
-   xterm -T "Client $i" -e "./client --ip $2 --port $1; bash" &
+   xterm -T "Client $i" -e "./client $2  $1; bash" &
    sleep 2s
 done
