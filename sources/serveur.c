@@ -2,6 +2,9 @@
 
 #define MEMOIRE 2 
 
+struct infosClient * listeClients;
+int compteurClient;
+
 void * threadService(void * param){
     
     pthread_exit(NULL);
@@ -12,7 +15,9 @@ int main(int argc, char* argv[]){
     int socket_locale = 0;
     int port_Serveur = 0;
     int socket_client = 0;
-    pthread_t ** vectorThread;
+    
+
+    compteurClient = 0;
     
     socklen_t longueurAdresse = (socklen_t) sizeof(struct sockaddr);
 
@@ -42,6 +47,7 @@ int main(int argc, char* argv[]){
 
     while(1){
         struct sockaddr tempAddr;
+        pthread_t thread;
         /**
         * Attente de demande de connection
         **/
@@ -61,6 +67,14 @@ int main(int argc, char* argv[]){
             perror(" ERROR ACCEPT ");
             exit(EXIT_FAILURE);
         }
+        listeClients[compteurClient] = malloc(sizeof(struct listeClients));
+        listeClients[compteurClient].position = compteurClient;
+        listeClients[compteurClient].adresseClient = tempAddr;
+        listeClients[compteurClient].socketClient = socket_client;
+        pthread_create(&thread,NULL,threadService,NULL);
+
+
+        compteurClient++;
     }
     
     close(socket_locale);

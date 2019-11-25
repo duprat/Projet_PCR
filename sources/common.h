@@ -46,6 +46,7 @@ struct infosClient{
     int socketClient;
     int posClient;
     struct sockaddr adresseClient;
+    struct * infosClient client_suivant;
 };
 
 /**
