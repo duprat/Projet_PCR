@@ -2,6 +2,7 @@
 
 int position;
 char monPseudo[N];
+char monID[N];
 
 void * reception(void * param){
     struct message * messageRecu;
@@ -10,12 +11,14 @@ void * reception(void * param){
     
     while(1){
         messageRecu = malloc(sizeof(struct message));
+        char ID[N];
         
         /**
         * Reception d'un message
         **/
         retourTCP = receptionTCP(*socket,(char*) messageRecu);
         
+        strcpy(ID,&messageRecu->pseudo[20]);
         /**
         * Gestion d'erreur
         **/
@@ -26,7 +29,7 @@ void * reception(void * param){
         /**
         *   Traitement du message recu
         **/
-        if(strcmp(messageRecu->pseudo,monPseudo)==0){
+        if(strcmp(ID,monID)==0){
             printf("Mon message a bien été enregistré.\n");
             printf("\"%s\"\n",messageRecu->text);
         }
@@ -114,9 +117,7 @@ int main(int argc, char** argv) {
         exit(EXIT_FAILURE);
     }
     
-    /**
-    * Etape de handshake
-    **/
+    /** ******************************** Etape Handshake ****************************************** **/
     messageEnvoie = malloc(sizeof(struct message));
     strcpy(messageEnvoie->pseudo,monPseudo);
     
@@ -127,7 +128,9 @@ int main(int argc, char** argv) {
     retourTCP = receptionTCP(socket_locale,(char*) messageRecu);
     
     strcpy(monPseudo,messageRecu->pseudo);
+    strcpy(monID,&monPseudo[20]);
     free(messageRecu);
+    /** ******************************* Fin Etape Handshake ****************************************** **/
     
     /**
     * Lancement du thread d'ecoute
