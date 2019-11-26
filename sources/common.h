@@ -60,6 +60,7 @@ struct message{
 };
 
 struct memoirePartagee{
+    int nbPosition;
     int position;
     struct message * commentaire;
     struct memoirePartagee * suivant;
