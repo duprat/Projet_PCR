@@ -117,9 +117,7 @@ int main(int argc, char** argv) {
         exit(EXIT_FAILURE);
     }
     
-    /**
-    * Etape de handshake
-    **/
+    /** ******************************** Etape Handshake ****************************************** **/
     messageEnvoie = malloc(sizeof(struct message));
     strcpy(messageEnvoie->pseudo,monPseudo);
     
@@ -132,6 +130,7 @@ int main(int argc, char** argv) {
     strcpy(monPseudo,messageRecu->pseudo);
     strcpy(monID,&monPseudo[20]);
     free(messageRecu);
+    /** ******************************* Fin Etape Handshake ****************************************** **/
     
     /**
     * Lancement du thread d'ecoute
