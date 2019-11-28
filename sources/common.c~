@@ -246,6 +246,7 @@ int receptionTCP(int socket,char * message){
         int tempRCV = 0;
         taille -= index;
         tempRCV = recv(socket,&message[index],taille,0);
+        printf("reception message: %s\n",message);
         if(tempRCV == 0){
             fprintf(stderr,"%s:%s:%d: SOCKET FERMEE.\n",NOM_PRGRM,__FILE__,__LINE__);
 		    return 0;
@@ -266,11 +267,13 @@ int receptionTCP(int socket,char * message){
 **/
 int envoieTCP(int socket, char * message){
     int index = 0;
-    long int taille = sizeof(struct message);
+    long int taille = sizeof(message);
+    printf("envoi message: %s\n",message);
     do{
         int tempRCV = 0;
         taille -= index;
         tempRCV = send(socket,&message[index], taille, 0);
+        printf("envoi message: %s\n",message);
         if(tempRCV == 0){
             fprintf(stderr,"%s:%s:%d: SOCKET FERMEE.\n",NOM_PRGRM,__FILE__,__LINE__);
 		    return 0;
@@ -292,9 +295,4 @@ void saisieClavier(char * string){
         i++;
     }
     string[i] = '\0';
-}
-
-char * messageToString(struct message * m){
-    
-    
 }

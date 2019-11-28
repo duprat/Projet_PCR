@@ -5,7 +5,7 @@
 
 struct memoirePartagee * memoire;
 struct infosClient * listeClients;
-int compteurClient;
+int compteurClient = 0;
 int positionClient = 0;
 int idSem = 0;
 
@@ -40,7 +40,7 @@ void rendreTicket(){
 /**
  * Envoie a partir de la position donnée en paramètre tous les messages manquant au client
  **/
-int envoieManquant(int position,struct infosClient client){
+int envoieManquant(int position,struct infosClient * client){
     int retourTCP = 1;
     struct memoirePartagee * memoireTmp = memoire;
 
@@ -49,7 +49,7 @@ int envoieManquant(int position,struct infosClient client){
     }
 
     for( int i = position; i < memoire->nbPosition; i++){ // Envoie chaque message non connu du client
-        retourTCP = envoieTCP(client.socketClient,(char *)memoireTmp->commentaire);
+        retourTCP = envoieTCP(client->socketClient,(char *)memoireTmp->commentaire);
         memoireTmp = memoireTmp->suivant;
     }
     if( retourTCP != 1 ){
@@ -74,7 +74,7 @@ void * reception(void * param){
         message_Envoi = malloc(sizeof(struct message));
 
         retourTCP = receptionTCP(clientCourant->socketClient, (char*)message_Recu);
-
+        
          if( retourTCP != 1 ){
               fprintf(stderr,"%s:%s:%d: ERROR RECEPTION_TCP.\n",NOM_PRGRM,__FILE__,__LINE__);
               if(retourTCP == 0){
@@ -97,13 +97,17 @@ void * reception(void * param){
                   pthread_exit(NULL);
               }
          }
+         for(int i = 0; message_Recu->pseudo[i] != ' ';i++){
+             printf("%c",message_Recu->pseudo[i]);
+         }
+         printf(" a dit: %s\n",message_Recu->text);
         /** ********************************* Modif mémoire partagée ****************************************** **/
 
         prendreTicket();
 
         int position = message_Recu->numero;
         if( position < memoire->nbPosition ){ //Si la position du message suposé par le client n'est pas la bonne alors il envoie toute les données manquantes
-            envoieManquant(position-1,*clientCourant);
+            envoieManquant(position-1,clientCourant);
         }
 
         struct memoirePartagee * memoireTmp = memoire;
@@ -164,20 +168,20 @@ void * reception(void * param){
 /**
  * Fonction principal de chaque fils 
  **/
-int fils(struct infosClient monClient){
+int fils(struct infosClient * monClient){
 
     pthread_t thread;
 
-    struct infosClient  clientCourant = monClient;
+    struct infosClient * clientCourant = monClient;
     struct message * message_Recu = malloc(sizeof(struct message));
     struct message * message_Envoi = malloc(sizeof(struct message));
     char * ID = NULL;
     int i = 0;
     int retourTCP = 1;
-
+    
     /** ******************************** Etape Handshake ****************************************** **/
 
-    retourTCP = receptionTCP(clientCourant.socketClient, (char*)message_Recu);
+    retourTCP = receptionTCP(clientCourant->socketClient,(char*) message_Recu);
     if( retourTCP != 1 ){
         fprintf(stderr,"%s:%s:%d: ERROR RECEPTION_TCP.\n",NOM_PRGRM,__FILE__,__LINE__);
         if(retourTCP == 0){
@@ -185,7 +189,7 @@ int fils(struct infosClient monClient){
             return -1;
         }
     }
-
+    
     // attribution ID unique (utilisation de la socket du client)
     while(message_Recu->pseudo[i] != '\0'){ // cherche la fin du pseudo
         i++;
@@ -194,10 +198,10 @@ int fils(struct infosClient monClient){
         message_Recu->pseudo[j] = ' ';
     }
     ID = &(message_Recu->pseudo[20]); // decalage case 20
-    sprintf(ID, "%d", clientCourant.socketClient); // int to char
+    sprintf(ID, "%d", clientCourant->socketClient); // int to char
     strcpy(message_Envoi->pseudo,message_Recu->pseudo);
 
-    retourTCP = envoieTCP(clientCourant.socketClient, (char*)message_Envoi);
+    retourTCP = envoieTCP(clientCourant->socketClient, (char*)message_Envoi);
 
     if( retourTCP != 1 ){
         fprintf(stderr,"%s:%s:%d: ERROR ENVOI_TCP.\n",NOM_PRGRM,__FILE__,__LINE__);
@@ -206,10 +210,9 @@ int fils(struct infosClient monClient){
             return -1;
         }
     }
-
     /** ******************************* Fin Etape Handshake ****************************************** **/
 
-    pthread_create(&thread,NULL,reception,(void *)&clientCourant); //Lancement du thread de reception de message
+    pthread_create(&thread,NULL,reception,(void *)clientCourant); //Lancement du thread de reception de message
 
     //Boucle qui vérifie si le client est bien à jour
     while ( 1 ) 
@@ -230,8 +233,6 @@ int main(int argc, char* argv[]){
     int socket_client = 0;
 
     listeClients = malloc(sizeof(struct infosClient));
-
-    compteurClient = 0;
     
     socklen_t longueurAdresse = (socklen_t) sizeof(struct sockaddr);
 
@@ -289,7 +290,7 @@ int main(int argc, char* argv[]){
             perror(" ERROR ACCEPT ");
             exit(EXIT_FAILURE);
         }
-
+        
         for(int i = 0; i<compteurClient;i++){
             tempClient = tempClient->client_suivant;
         }
@@ -299,8 +300,8 @@ int main(int argc, char* argv[]){
         tempClient->socketClient = socket_client;
         tempClient->client_suivant = malloc(sizeof(struct infosClient));
         
-        if( fork() == 0 ){
-            if(fils(*tempClient)==-1) // nouveaux fils car nouveaux client lui donnant au passage son client
+        if( fork() == 0 ){ // nouveaux fils car nouveaux client lui donnant au passage son client
+            if(fils(tempClient)==-1) 
             {
                 exit(0);
             }

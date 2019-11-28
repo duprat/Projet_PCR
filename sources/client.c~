@@ -120,8 +120,10 @@ int main(int argc, char** argv) {
     /** ******************************** Etape Handshake ****************************************** **/
     messageEnvoie = malloc(sizeof(struct message));
     messageEnvoie->numero = 0;
+    
+    printf("monPseudo: %s\n",monPseudo);
     strcpy(messageEnvoie->pseudo,monPseudo);
-    strcpy(messageEnvoie->text,"handshake");
+    printf("monPseudo: %s\n",messageEnvoie->pseudo);
     
     retourTCP = envoieTCP(socket_locale,(char*) messageEnvoie);
     if(retourTCP != 1){
@@ -133,7 +135,8 @@ int main(int argc, char** argv) {
     
     strcpy(monPseudo,messageRecu->pseudo);
     strcpy(monID,&monPseudo[20]);
-
+    
+    printf("pseudo recu: %s\n",monPseudo);
     free(messageRecu);
     /** ******************************* Fin Etape Handshake ****************************************** **/
     
@@ -147,16 +150,18 @@ int main(int argc, char** argv) {
     **/
     while(1){
         messageEnvoie = malloc(sizeof(struct message));
-        messageEnvoie->numero = position;
-        strcpy(messageEnvoie->pseudo,monPseudo);
         printf("Entrez votre message.\n");
         saisieClavier(messageEnvoie->text);
+        
+        printf("Je vais envoyer \"%s\"\n",messageEnvoie->text);
         
         /**
         * Envoie d'un message
         **/
         retourTCP = envoieTCP(socket_locale,(char*) messageEnvoie);
+        perror(NULL);
         
+        printf("J'ai envoye %d octets.\n\n",retourTCP);
         free(messageEnvoie);
     }
     
