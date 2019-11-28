@@ -269,6 +269,7 @@ int main(int argc, char* argv[]){
     socket_locale = creerSocket(AF_INET,SOCK_STREAM,port_Serveur);
 
     while(1){
+        printf("[SERVEUR] Attend de connexion d'un client.\n");
         struct sockaddr tempAddr;
         struct infosClient * tempClient = listeClients;
         /**
@@ -308,6 +309,7 @@ int main(int argc, char* argv[]){
         }
         
         compteurClient++;
+        printf("Nombre de client total = %d.\n",compteurClient); 
     }
     
     close(socket_locale);
