@@ -1,3 +1,6 @@
+#include <sys/socket.h>
+#include <sys/types.h> 
+
 #include "common.h"
 
 #define MEMOIRE 10
@@ -32,19 +35,19 @@ void rendreTicket(){
     rendreMemoire.sem_num = 0;
     rendreMemoire.sem_op = -1;
     rendreMemoire.sem_flg = 0;
-    
+
     semop(idSem,&rendreMemoire,1);
 
 }
 
 /**
- * Envoie a partir de la position donnée en paramètre tous les messages manquant au client
+ * Envoie a partir de la position donnée en paramètre tout les messages manquant au client
  **/
-int envoieManquant(int position,struct infosClient client){
+void envoieManquant(int position,struct infosClient client){
     int retourTCP = 1;
     struct memoirePartagee * memoireTmp = memoire;
 
-    for( int i = 0; i != position; i++ ){ //Se place a l'emplacement du dernier message connu du client
+    for( int i = 0; i != position; i++ ){ //Ce place a l'emplacement du dernier message connu du client
         memoireTmp = memoireTmp->suivant;
     }
 
@@ -52,51 +55,27 @@ int envoieManquant(int position,struct infosClient client){
         retourTCP = envoieTCP(client.socketClient,(char *)memoireTmp->commentaire);
         memoireTmp = memoireTmp->suivant;
     }
+
     if( retourTCP != 1 ){
-        fprintf(stderr,"%s:%s:%d: ERROR ENVOI_TCP.\n",NOM_PRGRM,__FILE__,__LINE__);
-        if(retourTCP == 0){
-            fprintf(stderr,"%s:%s:%d: SOCKET CLOSED.\n",NOM_PRGRM,__FILE__,__LINE__);
-            return -1;
-        }
+        printf(" Erreur retourTCP dans envoie Manquant serveur ! \n ");
     }
-    return 0;
+
 }
 
 void * reception(void * param){
     struct infosClient * clientCourant = param;
-    struct message * message_Recu;
-    struct message * message_Envoi;
-    int retourTCP = 0;
+    struct message * message_Recu = malloc(sizeof(struct message));
+    struct message * message_Envoi = malloc(sizeof(struct message));
+    int retourTCP;
 
     while(1){
-        
+        free(message_Recu);
+        free(message_Envoi);
         message_Recu = malloc(sizeof(struct message));
         message_Envoi = malloc(sizeof(struct message));
 
         retourTCP = receptionTCP(clientCourant->socketClient, (char*)message_Recu);
 
-         if( retourTCP != 1 ){
-              fprintf(stderr,"%s:%s:%d: ERROR RECEPTION_TCP.\n",NOM_PRGRM,__FILE__,__LINE__);
-              if(retourTCP == 0){
-                  fprintf(stderr,"%s:%s:%d: SOCKET CLOSED.\n",NOM_PRGRM,__FILE__,__LINE__);
-                  
-                  if(clientCourant->posClient == 0){
-                      free(clientCourant->client_suivant);
-                  }
-                  else{
-                      struct infosClient * client_precedent = listeClients;
-                      for(int i = 0; i < clientCourant->posClient - 1;i++){
-                          client_precedent = client_precedent->client_suivant;
-                      }
-                      client_precedent->client_suivant = client_precedent->client_suivant->client_suivant;
-                  }
-                  free(message_Recu);
-                  free(message_Envoi);
-                  free(clientCourant);
-                  compteurClient--;
-                  pthread_exit(NULL);
-              }
-         }
         /** ********************************* Modif mémoire partagée ****************************************** **/
 
         prendreTicket();
@@ -112,51 +91,28 @@ void * reception(void * param){
             memoireTmp = memoireTmp->suivant;
         }
 
-        struct memoirePartagee * nouvelleMemoir = malloc(sizeof(struct memoirePartagee)); //je crée un nouvel element de mémoire partagé pour le dernier message recu
+        struct memoirePartagee * nouvelleMemoir = malloc(sizeof(struct memoirePartagee)); //je crée un nouvelle element de mémoire partagé pour le dernier message recu
 
         message_Recu->numero = memoire->nbPosition + 1;
 
         nouvelleMemoir->commentaire = message_Recu;
-        nouvelleMemoir->position = message_Recu->numero; // ici il faudrait plutot donner nbPosition non ?
+        nouvelleMemoir->position = message_Recu->numero;
 
         memoireTmp->suivant = nouvelleMemoir;
 
-        memoire->nbPosition = message_Recu->numero; // et du coup cette ligne ne serait pas utile
+        memoire->nbPosition = message_Recu->numero;
 
         message_Envoi = message_Recu;
         rendreTicket();
         /** ******************************* Fin Modif mémoire partagée ****************************************** **/
 
         retourTCP = envoieTCP(clientCourant->socketClient, (char*)message_Envoi);
-        
+
         if( retourTCP != 1 ){
-             fprintf(stderr,"%s:%s:%d: ERROR RECEPTION_TCP.\n",NOM_PRGRM,__FILE__,__LINE__);
-             if(retourTCP == 0){
-                 fprintf(stderr,"%s:%s:%d: SOCKET CLOSED.\n",NOM_PRGRM,__FILE__,__LINE__);
-                 
-                 if(clientCourant->posClient == 0){
-                     free(clientCourant->client_suivant);
-                 }
-                 else{
-                     struct infosClient * client_precedent = listeClients;
-                     for(int i = 0; i < clientCourant->posClient - 1;i++){
-                         client_precedent = client_precedent->client_suivant;
-                     }
-                     client_precedent->client_suivant = client_precedent->client_suivant->client_suivant;
-                 }
-                 free(message_Recu);
-                 free(message_Envoi);
-                 free(clientCourant);
-                 compteurClient--;
-                 pthread_exit(NULL);
-             }
+            printf(" erreur envoieTCP dans reception serveur ! \n");
         }
-         
-        free(message_Recu);
-        free(message_Envoi);
     }
 
-    free(clientCourant);
     pthread_exit(NULL);
 }
 
@@ -164,7 +120,7 @@ void * reception(void * param){
 /**
  * Fonction principal de chaque fils 
  **/
-int fils(struct infosClient monClient){
+void fils(struct infosClient monClient){
 
     pthread_t thread;
 
@@ -178,13 +134,6 @@ int fils(struct infosClient monClient){
     /** ******************************** Etape Handshake ****************************************** **/
 
     retourTCP = receptionTCP(clientCourant.socketClient, (char*)message_Recu);
-    if( retourTCP != 1 ){
-        fprintf(stderr,"%s:%s:%d: ERROR RECEPTION_TCP.\n",NOM_PRGRM,__FILE__,__LINE__);
-        if(retourTCP == 0){
-            fprintf(stderr,"%s:%s:%d: SOCKET CLOSED.\n",NOM_PRGRM,__FILE__,__LINE__);
-            return -1;
-        }
-    }
 
     // attribution ID unique (utilisation de la socket du client)
     while(message_Recu->pseudo[i] != '\0'){ // cherche la fin du pseudo
@@ -200,11 +149,7 @@ int fils(struct infosClient monClient){
     retourTCP = envoieTCP(clientCourant.socketClient, (char*)message_Envoi);
 
     if( retourTCP != 1 ){
-        fprintf(stderr,"%s:%s:%d: ERROR ENVOI_TCP.\n",NOM_PRGRM,__FILE__,__LINE__);
-        if(retourTCP == 0){
-            fprintf(stderr,"%s:%s:%d: SOCKET CLOSED.\n",NOM_PRGRM,__FILE__,__LINE__);
-            return -1;
-        }
+        printf(" Erreur retourTCP dans fils serveur ! \n");
     }
 
     /** ******************************* Fin Etape Handshake ****************************************** **/
@@ -300,10 +245,7 @@ int main(int argc, char* argv[]){
         tempClient->client_suivant = malloc(sizeof(struct infosClient));
         
         if( fork() == 0 ){
-            if(fils(*tempClient)==-1) // nouveaux fils car nouveaux client lui donnant au passage son client
-            {
-                exit(0);
-            }
+            fils(*tempClient); // nouveaux fils car nouveaux client lui donnant au passage son client
         }
         
         compteurClient++;
