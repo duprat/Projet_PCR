@@ -35,16 +35,14 @@ int main( int argc, char* argv[]){
             nbSemaphores += 1;
             cpt++;
         }
-        
-
     }
     
     condition = 1;
 
     cpt = 10;
 
-    while ( condition )
-    {
+    while ( cpt < 10 )
+    {   
         key_t cleSegment = ftok(".",cpt);
 
         if( cleSegment == -1 ){
@@ -65,7 +63,6 @@ int main( int argc, char* argv[]){
             nbMemoires += 1;
             cpt++;
         }
-        
     }
 
     printf("Nombre de semaphore détruite = %d.\n",nbSemaphores);

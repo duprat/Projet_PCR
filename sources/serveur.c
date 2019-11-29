@@ -1,4 +1,5 @@
 #include "common.h"
+#include <signal.h>
 
 #define MEMOIRE 10
 #define SEMAPHORE 1
@@ -8,6 +9,14 @@ struct infosClient * listeClients;
 int compteurClient = 0;
 int positionClient = 0;
 int idSem = 0;
+int end = 0;
+
+
+void signalHandler(int signal) {
+    end = -1;
+    printf("Demande de terminaison recu.\n");
+}
+
 
 /**
  * prend un ticket pour l'accès a la mémoire
@@ -228,6 +237,8 @@ int fils(struct infosClient * monClient){
 
 int main(int argc, char* argv[]){
 
+    //signal(SIGINT, signalHandler); par encore expoitable
+
     int socket_locale = 0;
     int port_Serveur = 0;
     int socket_client = 0;
@@ -268,7 +279,7 @@ int main(int argc, char* argv[]){
     **/
     socket_locale = creerSocket(AF_INET,SOCK_STREAM,port_Serveur);
 
-    while(1){
+    while( end != -1 ){
         printf("[SERVEUR] Attend de connexion d'un client.\n");
         struct sockaddr tempAddr;
         struct infosClient * tempClient = listeClients;
@@ -312,6 +323,7 @@ int main(int argc, char* argv[]){
         printf("Nombre de client total = %d.\n",compteurClient); 
     }
     
+    detachement(memoire);
     close(socket_locale);
     destruction(idMemoire);
     destruction(idSem);

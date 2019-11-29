@@ -12,4 +12,5 @@ common.o: common.c common.h
 clean:
 	rm -rf common.o serveur client
 	clear
+	
 				
