@@ -12,17 +12,11 @@ int idSem = 0;
 int end = 0;
 
 
-void signalHandler(int signal) {
-    end = -1;
-    printf("Demande de terminaison recu.\n");
-}
-
 
 /**
  * prend un ticket pour l'accès a la mémoire
  **/
 void prendreTicket(){
-
     struct sembuf accesMemoire;
     accesMemoire.sem_num = 0;
     accesMemoire.sem_op = -1;
@@ -36,29 +30,33 @@ void prendreTicket(){
  * rend un ticket pour l'accès a la mémoire
  **/
 void rendreTicket(){
-
     struct sembuf rendreMemoire;
     rendreMemoire.sem_num = 0;
-    rendreMemoire.sem_op = -1;
+    rendreMemoire.sem_op = 1;
     rendreMemoire.sem_flg = 0;
     
     semop(idSem,&rendreMemoire,1);
-
 }
 
 /**
  * Envoie a partir de la position donnée en paramètre tous les messages manquant au client
  **/
 int envoieManquant(int position,struct infosClient * client){
+    printf("ENVOIE MANQUANT debut\n");
+    printf("Position du client = %d || Position de la mémoire = %d \n",positionClient,memoire->nbPosition);
     int retourTCP = 1;
     struct memoirePartagee * memoireTmp = memoire;
+    struct message * message_Envoi;
 
-    for( int i = 0; i != position; i++ ){ //Se place a l'emplacement du dernier message connu du client
+    for( int i = 0;  position != memoireTmp->position; i++ ){ //Se place a l'emplacement du dernier message connu du client
         memoireTmp = memoireTmp->suivant;
+        printf("envoie manquant memoire suivante %d\n",i);
     }
 
-    for( int i = position; i < memoire->nbPosition; i++){ // Envoie chaque message non connu du client
-        retourTCP = envoieTCP(client->socketClient,(char *)memoireTmp->commentaire);
+    for( int i = position; i < (memoire->nbPosition); i++){ // Envoie chaque message non connu du client
+        printf("Envoie du message numero = %d\n",memoireTmp->position);
+        message_Envoi = memoireTmp->commentaire;
+        retourTCP = envoieTCP(client->socketClient,(char *)message_Envoi);
         memoireTmp = memoireTmp->suivant;
     }
     if( retourTCP != 1 ){
@@ -69,6 +67,22 @@ int envoieManquant(int position,struct infosClient * client){
         }
     }
     return 0;
+}
+
+void affichageMemoire(){
+    struct memoirePartagee * memoireTmp = memoire;
+
+    printf(" -------------------------\n");
+    printf("| DEBUT AFFICHAGE MEMOIRE |\n");
+    printf(" -------------------------\n");
+    printf("MEMOIRE NBPOSITION = %d \n",memoire->nbPosition);
+    for( int i = 0; i < memoire->nbPosition; i++ ){
+        printf("[%s] %s || position message = %d\n",memoireTmp->commentaire->pseudo,memoireTmp->commentaire->text,memoireTmp->position);
+        memoireTmp = memoireTmp->suivant;
+    }
+    printf(" -----------------------\n");
+    printf("| FIN AFFICHAGE MEMOIRE |\n");
+    printf(" -----------------------\n");
 }
 
 void * reception(void * param){
@@ -112,32 +126,57 @@ void * reception(void * param){
          printf(" a dit: %s\n",message_Recu->text);
         /** ********************************* Modif mémoire partagée ****************************************** **/
 
+        printf("DEBUT RECEPTION\n");
         prendreTicket();
 
-        int position = message_Recu->numero;
-        if( position < memoire->nbPosition ){ //Si la position du message suposé par le client n'est pas la bonne alors il envoie toute les données manquantes
-            envoieManquant(position-1,clientCourant);
+        printf(" memoir position = %d | message numero = %d\n",memoire->nbPosition,message_Recu->numero);
+        if( message_Recu->numero <= memoire->nbPosition ){ //Si la position du message suposé par le client n'est pas la bonne alors il envoie toute les données manquantes
+            envoieManquant(message_Recu->numero-1,clientCourant);
+            printf("\n\n\n\nJE RENTRE PAS PLZZ ??\n\n\n\n");
+        }
+
+        if( memoire->nbPosition != 0 ){
+            printf("\n\npremier element memoire\n");
+            printf("commentaire -> %s | position -> %d\n\n\n",memoire->commentaire->text,memoire->position);
         }
 
         struct memoirePartagee * memoireTmp = memoire;
 
-        for(int i = 0; i < memoire->nbPosition; i++ ){ //j'accède au dernier message de la mémoire partagé
+
+        for(int i = 0; i < memoire->nbPosition - 1 ; i++ ){ //j'accède au dernier message de la mémoire partagé
             memoireTmp = memoireTmp->suivant;
         }
 
-        struct memoirePartagee * nouvelleMemoir = malloc(sizeof(struct memoirePartagee)); //je crée un nouvel element de mémoire partagé pour le dernier message recu
 
-        message_Recu->numero = memoire->nbPosition + 1;
 
-        nouvelleMemoir->commentaire = message_Recu;
-        nouvelleMemoir->position = message_Recu->numero; // ici il faudrait plutot donner nbPosition non ?
+        if( memoire->nbPosition == 0 ){
+            memoire->nbPosition = message_Recu->numero; // Normalement 1 
+            memoire->position = 0;
+            memoire->commentaire = message_Recu;
+            printf("MEMOIRE PREMIER ELEMENT PREMIER COUT\n");
+            printf("commentaire -> %s | position -> %d\n\n\n",memoire->commentaire->text,memoire->position);
+        }else{
+            struct memoirePartagee * nouvelleMemoir = malloc(sizeof(struct memoirePartagee)); //je crée un nouvel element de mémoire partagé pour le dernier message recu
+            message_Recu->numero = memoire->nbPosition + 1;
+            nouvelleMemoir->commentaire = message_Recu;
+            nouvelleMemoir->position = memoire->nbPosition; 
+            memoireTmp->suivant = nouvelleMemoir;
+            memoire->nbPosition = message_Recu->numero;
+            positionClient = message_Recu->numero;
+            printf("\n\n\naffichage element courant\n");
+            printf("commenatire -> %s | position -> %d\n\n\n",memoireTmp->commentaire->text,memoireTmp->position);
+            printf("affichage nouvelle_memoire\n");
+            printf("commentaire -> %s | position -> %d \n\n\n",nouvelleMemoir->commentaire->text,nouvelleMemoir->position);
+        }
 
-        memoireTmp->suivant = nouvelleMemoir;
 
-        memoire->nbPosition = message_Recu->numero; // et du coup cette ligne ne serait pas utile
-
+        
         message_Envoi = message_Recu;
+        positionClient = message_Recu->numero;
         rendreTicket();
+        printf("FIN RECEPTION\n");
+        //affichageMemoire();
+
         /** ******************************* Fin Modif mémoire partagée ****************************************** **/
 
         retourTCP = envoieTCP(clientCourant->socketClient, (char*)message_Envoi);
@@ -164,7 +203,7 @@ void * reception(void * param){
                  pthread_exit(NULL);
              }
         }
-         
+
         free(message_Recu);
         free(message_Envoi);
     }
@@ -225,19 +264,16 @@ int fils(struct infosClient * monClient){
 
     //Boucle qui vérifie si le client est bien à jour
     while ( 1 ) 
-    {
+    {   
         prendreTicket();
         if( memoire->nbPosition != positionClient){
             envoieManquant(positionClient,clientCourant);
         }
         rendreTicket();
     }
-    
 }
 
 int main(int argc, char* argv[]){
-
-    //signal(SIGINT, signalHandler); par encore expoitable
 
     int socket_locale = 0;
     int port_Serveur = 0;
@@ -252,6 +288,8 @@ int main(int argc, char* argv[]){
     int idMemoire = init_shm(keyMemoire,sizeof(struct memoirePartagee));
 
     memoire = attachement(idMemoire);
+
+    memoire = malloc(sizeof(struct memoirePartagee));
 
     key_t keySem = getKey(SEMAPHORE);
 
@@ -279,7 +317,8 @@ int main(int argc, char* argv[]){
     **/
     socket_locale = creerSocket(AF_INET,SOCK_STREAM,port_Serveur);
 
-    while( end != -1 ){
+    while( end != 1 ){
+        //char continuer  = 'O';
         printf("[SERVEUR] Attend de connexion d'un client.\n");
         struct sockaddr tempAddr;
         struct infosClient * tempClient = listeClients;
@@ -311,22 +350,27 @@ int main(int argc, char* argv[]){
         tempClient->adresseClient = tempAddr;
         tempClient->socketClient = socket_client;
         tempClient->client_suivant = malloc(sizeof(struct infosClient));
-        
+
+
+
         if( fork() == 0 ){ // nouveaux fils car nouveaux client lui donnant au passage son client
-            if(fils(tempClient)==-1) 
-            {
-                exit(0);
-            }
+            fils(tempClient);
         }
-        
+    
+
         compteurClient++;
-        printf("Nombre de client total = %d.\n",compteurClient); 
+        printf("Nombre de client total = %d.\n",compteurClient);
+        /*printf("Voulez vous continuez ? O / N \n");
+        scanf("%c",&continuer);
+        if( continuer == 'N' || continuer == 'n'){
+            end = -1;
+        }*/
     }
     
-    detachement(memoire);
+    //detachement(memoire);
     close(socket_locale);
     destruction(idMemoire);
-    destruction(idSem);
+    //destruction(idSem);
 
     return 0;
 }

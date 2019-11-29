@@ -6,9 +6,7 @@
 #include <stdlib.h>
 
 int main( int argc, char* argv[]){
-    
-    int nbSemaphores = 0;
-    int nbMemoires = 0;
+
 
     int condition = 1;
 
@@ -32,7 +30,6 @@ int main( int argc, char* argv[]){
         if( semctl(idSemaphore,0,IPC_RMID) == -1 ){
             condition = 0;
         }else{
-            nbSemaphores += 1;
             cpt++;
         }
     }
@@ -41,7 +38,7 @@ int main( int argc, char* argv[]){
 
     cpt = 10;
 
-    while ( cpt < 10 )
+    while ( cpt < 20 )
     {   
         key_t cleSegment = ftok(".",cpt);
 
@@ -60,15 +57,10 @@ int main( int argc, char* argv[]){
             condition = 0;
         }else
         {
-            nbMemoires += 1;
-            cpt++;
+                        cpt++;
         }
     }
-
-    printf("Nombre de semaphore détruite = %d.\n",nbSemaphores);
-
-    printf("Nombre de segment de mémoire dértuit = %d.\n",nbMemoires);
-    
+  
 
     return 0;
 }

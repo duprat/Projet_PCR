@@ -38,7 +38,7 @@ void * reception(void * param){
             printf("%s:\n",messageRecu->pseudo);
             printf("  %s\n",messageRecu->text);
         }
-        position++;
+        position = messageRecu->numero + 1;
         free(messageRecu);
     }
     pthread_exit(NULL);
@@ -51,7 +51,7 @@ int main(int argc, char** argv) {
     int socket_locale = 0;
     int port_Serveur = 0;
     int retourTCP = 0;
-    position = -1;
+    position = 1;
     char nom_serveur[N];
     struct message * messageEnvoie;
     struct sockaddr * adresse_Serveur = malloc(sizeof(struct sockaddr));
@@ -147,11 +147,10 @@ int main(int argc, char** argv) {
     **/
     while(1){
         messageEnvoie = malloc(sizeof(struct message));
-        messageEnvoie->numero = position;
         strcpy(messageEnvoie->pseudo,monPseudo);
         printf("Entrez votre message.\n");
         saisieClavier(messageEnvoie->text);
-        
+        messageEnvoie->numero = position;        
         /**
         * Envoie d'un message
         **/
