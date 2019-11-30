@@ -30,11 +30,11 @@ void * reception(void * param){
         *   Traitement du message recu
         **/
         if(strcmp(ID,monID)==0){
-            printf("Mon message \"%s\" a bien été enregistré.\n",messageRecu->text);
-            printf("Entrez votre message.\n");
+            printf("Mon message a bien été enregistré.\n");
+            printf("\"%s\"\n",messageRecu->text);
         }
         else{
-            printf("Il reste %d messages non lus.\n",(messageRecu->dernierMessage - position));
+            printf("Il reste %d messages non lus.\n",(messageRecu->numero - position));
             printf("%s:\n",messageRecu->pseudo);
             printf("  %s\n",messageRecu->text);
         }
@@ -150,8 +150,7 @@ int main(int argc, char** argv) {
         strcpy(messageEnvoie->pseudo,monPseudo);
         printf("Entrez votre message.\n");
         saisieClavier(messageEnvoie->text);
-        messageEnvoie->numero = position;
-        messageEnvoie->dernierMessage = position - 1;
+        messageEnvoie->numero = position;        
         /**
         * Envoie d'un message
         **/
