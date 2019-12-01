@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <signal.h>
 #include <errno.h>
 #include <time.h>
 #include <pthread.h>
@@ -61,12 +62,6 @@ struct message{
 struct memoirePartagee{
     int nbMessages;
     struct message commentaire;
-};
-
-struct paramThread{
-    struct memoirePartagee * memoire;
-    int index_client;
-    struct infosClient * listeClients;
 };
 
 /**
@@ -178,6 +173,11 @@ int envoieTCP(int socket, char * message);
  * le retour chariot.
  */
 void saisieClavier(char * string);
+
+/** 
+ *  affichage du message et de son envoyeur
+ **/ 
+void affichageMessage(struct message * message);
 
 
 #endif

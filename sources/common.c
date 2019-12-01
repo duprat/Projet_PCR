@@ -247,11 +247,9 @@ int receptionTCP(int socket,char * message){
         taille -= index;
         tempRCV = recv(socket,&message[index],taille,0);
         if(tempRCV == 0){
-            fprintf(stderr,"%s:%s:%d: SOCKET FERMEE.\n",NOM_PRGRM,__FILE__,__LINE__);
 		    return 0;
         }
         if(tempRCV == -1){
-            fprintf(stderr,"%s:%s:%d: ERROR RECEPTION_TCP.\n",NOM_PRGRM,__FILE__,__LINE__);
             return -1;
         }
         index += tempRCV;
@@ -272,11 +270,9 @@ int envoieTCP(int socket, char * message){
         taille -= index;
         tempRCV = send(socket,&message[index], taille, 0);
         if(tempRCV == 0){
-            fprintf(stderr,"%s:%s:%d: SOCKET FERMEE.\n",NOM_PRGRM,__FILE__,__LINE__);
 		    return 0;
         }
         if(tempRCV == -1){
-            fprintf(stderr,"%s:%s:%d: ERROR ENVOI_TCP.\n",NOM_PRGRM,__FILE__,__LINE__);
             return -1;
         }
         index += tempRCV;
@@ -293,3 +289,15 @@ void saisieClavier(char * string){
     }
     string[i] = '\0';
 }
+
+/** 
+ *  affichage du message et de son envoyeur
+ **/ 
+void affichageMessage(struct message * message){
+    for(int i = 0; message->pseudo[i] != ' ';i++){
+        printf("%c",message->pseudo[i]);
+    }
+    printf(" a dit: %s\n",message->text);
+}
+
+

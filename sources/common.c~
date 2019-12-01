@@ -293,8 +293,3 @@ void saisieClavier(char * string){
     }
     string[i] = '\0';
 }
-
-char * messageToString(struct message * m){
-    
-    
-}
