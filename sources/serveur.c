@@ -388,6 +388,7 @@ int main(int argc, char* argv[]){
             struct memoirePartagee * memoire = NULL;
             struct infosClient * listeClients = NULL;
             
+           
             /**
             *   Attachement a la memoire partagee et a la liste de clients
             **/
@@ -402,7 +403,6 @@ int main(int argc, char* argv[]){
                 perror("Error SHMAT ");
                 exit(EXIT_FAILURE);
             }
-            listeClients[0].nbClients++;
 
             listeClients[listeClients[0].nbClients].adresseClient = tempAddr;
             listeClients[listeClients[0].nbClients].socketClient = socket_client;
@@ -412,7 +412,9 @@ int main(int argc, char* argv[]){
             if( continuer == 'N' || continuer == 'n'){
             end = -1;
             }*/
-            fils(listeClients, memoire, (listeClients[0].nbClients - 1) );
+            
+            fils(listeClients, memoire, listeClients[0].nbClients);
+            listeClients[0].nbClients++;
         }
     }
         
