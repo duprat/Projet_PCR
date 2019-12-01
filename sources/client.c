@@ -30,15 +30,15 @@ void * reception(void * param){
         *   Traitement du message recu
         **/
         if(strcmp(ID,monID)==0){
-            printf("Mon message \"%s\" a bien été enregistré.\n",messageRecu->text);
-            printf("Entrez votre message.\n");
+            printf("\nMon message \"%s\" a bien été enregistré.\n",messageRecu->text);
+            printf("\nEntrez votre message -> \n");
         }
         else{
-            printf("Il reste %d messages non lus.\n",(messageRecu->nbMessages - dernierMessage));
-            printf("%s:\n",messageRecu->pseudo);
-            printf("  %s\n",messageRecu->text);
-            printf("\nEntrez votre message.\n");
+            printf("\nIl reste %d messages non lus.\n",(messageRecu->nbMessages - dernierMessage));
+            affichageMessage(messageRecu);
+            printf("\nEntrez votre message -> \n");
         }
+        
         dernierMessage++;
         free(messageRecu);
     }
@@ -147,9 +147,10 @@ int main(int argc, char** argv) {
     while(1){
         messageEnvoie = malloc(sizeof(struct message));
         strcpy(messageEnvoie->pseudo,monPseudo);
-        printf("Entrez votre message.\n");
+        printf("\nEntrez votre message -> ");
         saisieClavier(messageEnvoie->text);
         messageEnvoie->nbMessages = dernierMessage;
+        
         /**
         * Envoie d'un message
         **/

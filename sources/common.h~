@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <signal.h>
 #include <errno.h>
 #include <time.h>
 #include <pthread.h>
@@ -45,9 +46,7 @@ union sem_union{
 struct infosClient{
     int nbClients;
     int socketClient;
-    int posClient;
     struct sockaddr adresseClient;
-    struct infosClient * client_suivant;
 };
 
 /**
@@ -55,23 +54,20 @@ struct infosClient{
 * veut a l'interieur, en TCP et UDP
 **/
 struct message{
-    int dernierMessage; 
-    int numero;
+    int nbMessages;
     char pseudo[N];
     char text[N];
 };
 
 struct memoirePartagee{
     int nbMessages;
-    int numeroMessage;
     struct message commentaire;
-    struct memoirePartagee * suivant;
 };
 
 struct paramThread{
     struct memoirePartagee * memoire;
-    struct infosClient * client_courant;
-    struct infosClient * premier_client;
+    int index_client;
+    struct infosClient * listeClients;
 };
 
 /**
@@ -90,9 +86,8 @@ int init_shm(key_t key, size_t size);
 * Permet a un processus de s'attacher a une zone de memoire partagee
 *          --> Modifier le type de retour en fonction <--
 *          --> du type de ce que l'on veut manipuler <--
-* Inutilisable dans le cas du projet de pcr
 ****************************************************************** **/
-//struct memoirePartagee * attachement(int shm_id);
+struct memoirePartagee * attachement(int shm_id);
 
 /** 
 * Detache le processus courant de la zone de memoire 

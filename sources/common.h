@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <signal.h>
 #include <errno.h>
 #include <time.h>
 #include <pthread.h>
@@ -63,12 +64,6 @@ struct memoirePartagee{
     struct message commentaire;
 };
 
-struct paramThread{
-    struct memoirePartagee * memoire;
-    int index_client;
-    struct infosClient * listeClients;
-};
-
 /**
 * renvoie une clef en fonction d'un fichier
 * et d'un entier
@@ -85,9 +80,8 @@ int init_shm(key_t key, size_t size);
 * Permet a un processus de s'attacher a une zone de memoire partagee
 *          --> Modifier le type de retour en fonction <--
 *          --> du type de ce que l'on veut manipuler <--
-* Inutilisable dans le cas du projet de pcr
 ****************************************************************** **/
-//struct memoirePartagee * attachement(int shm_id);
+struct memoirePartagee * attachement(int shm_id);
 
 /** 
 * Detache le processus courant de la zone de memoire 
@@ -179,6 +173,11 @@ int envoieTCP(int socket, char * message);
  * le retour chariot.
  */
 void saisieClavier(char * string);
+
+/** 
+ *  affichage du message et de son envoyeur
+ **/ 
+void affichageMessage(struct message * message);
 
 
 #endif

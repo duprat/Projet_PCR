@@ -1,5 +1,4 @@
 #include "common.h"
-#include <signal.h>
 
 #define MEMOIRE 10
 #define SEMAPHORE 1
@@ -8,7 +7,7 @@ int dernierePosClient = 0;
 int dernierMessageClient = 0;
 int idSem = 0;
 int end = 0;
-
+struct infosClient * ceClient = NULL;
 
 /**
  * prend un ticket pour l'accès a la mémoire
@@ -57,43 +56,18 @@ char * attributionID(struct message * message_Recu, struct message * message_Env
 
 void affichageMemoire(struct memoirePartagee * memoire){
     if(memoire[0].nbMessages != 0){
-        printf("\n\n -------------------------\n");
+        printf("\n -------------------------\n");
         printf("| DEBUT AFFICHAGE MEMOIRE |\n");
         printf(" -------------------------\n");
-        printf("MEMOIRE nbMessages = %d \n",memoire[0].nbMessages);
+        printf("Nombre de messages en mémoire = %d \n",memoire[0].nbMessages);
         for(int i = 0;i<memoire[0].nbMessages;i++){
             printf("[%s] %s || indexMessage = %d\n",memoire[i].commentaire.pseudo,memoire[i].commentaire.text,i);
         }
         printf(" -----------------------\n");
         printf("| FIN AFFICHAGE MEMOIRE |\n");
-        printf(" -----------------------\n\n");
+        printf(" -----------------------\n");
     }
     
-}
-
-void affichageClients(struct infosClient * liste){
-
-    printf("\n\n ------------------------------\n");
-    printf("| DEBUT AFFICHAGE LISTE_CLIENT |\n");
-    printf(" ------------------------------\n");
-    printf("LISTECLIENT nbClients = %d \n",liste[0].nbClients);
-    for(int i = 0;i<liste[0].nbClients;i++){
-        printf("socketClient= %d || posClient = %d\n",liste[i].socketClient,i);
-    }
-    printf(" ----------------------------\n");
-    printf("| FIN AFFICHAGE LISTE_CLIENT |\n");
-    printf(" ----------------------------\n\n");
-}
-
-/** 
- *  affichage du message et de son envoyeur
- **/ 
-void affichageMessage(struct message * message){
-    
-    for(int i = 0; message->pseudo[i] != ' ';i++){
-        printf("%c",message->pseudo[i]);
-    }
-    printf(" a dit: %s\n",message->text);
 }
 
 /** ****************************************** FIN AFFICHAGE ******************************************** **/
@@ -101,23 +75,20 @@ void affichageMessage(struct message * message){
 /**
  * Envoie a partir de la position donnée en paramètre tous les messages manquant au client
  **/
-int envoieManquant(int nbMessagesClient, int indexClient,struct infosClient * listeClients, struct memoirePartagee * memoire){
+int envoieManquant(int nbMessagesClient, struct memoirePartagee * memoire){
     int retourTCP = 1;
     struct message * message_Envoi = malloc(sizeof(struct message));
     
-    printf("ENVOIE MANQUANT debut\n");
-    printf("nbMessages client = %d || nbMessages mémoire = %d \n",nbMessagesClient,memoire[0].nbMessages);
-    
     if(memoire[0].nbMessages != 0){
-        for( int i = (nbMessagesClient - 1); i < memoire[0].nbMessages; i++){ // Envoie chaque message non connu du client
-            printf("Envoie du message numero = %d\n",i);
+        for( int i = nbMessagesClient; i < memoire[0].nbMessages; i++){ // Envoie chaque message non connu du client
 
             strcpy(message_Envoi->pseudo,memoire[i].commentaire.pseudo);
             strcpy(message_Envoi->text,memoire[i].commentaire.text);
-
-            retourTCP = envoieTCP(listeClients[indexClient].socketClient,(char *)message_Envoi);
+            message_Envoi->nbMessages = (memoire[0].nbMessages - 1);
+            retourTCP = envoieTCP(ceClient->socketClient,(char *)message_Envoi);
             if( retourTCP != 1 ){
                 fprintf(stderr,"%s:%s:%d: ERROR ENVOI_TCP.\n",NOM_PRGRM,__FILE__,__LINE__);
+                
                 if(retourTCP == 0){
                     fprintf(stderr,"%s:%s:%d: SOCKET CLOSED.\n",NOM_PRGRM,__FILE__,__LINE__);
                     return -1;
@@ -126,19 +97,16 @@ int envoieManquant(int nbMessagesClient, int indexClient,struct infosClient * li
         }
     }
     else{
-        printf("Aucun message en memoire.\n");
+        printf("[%d] Aucun message en memoire.\n",getpid());
     }
     free(message_Envoi);
-    printf("SORTIE Envoie Manaquant\n");
-    return 0;
+    dernierMessageClient = memoire[0].nbMessages;
+    return memoire[0].nbMessages;
 }
 
 void * reception(void * param){
 
-    struct paramThread * paramThread = param;
-    struct infosClient * listeClients = paramThread->listeClients;
-    struct memoirePartagee * memoire = paramThread->memoire;
-    int indexClientCourant = paramThread->index_client;
+    struct memoirePartagee * memoire = param;
     
     struct message * message_Recu;
     struct message * message_Envoi;
@@ -146,15 +114,13 @@ void * reception(void * param){
 
     while(1){
         
-        printf("\n\nDEBUT RECEPTION\n");
-        
         message_Recu = malloc(sizeof(struct message));
         message_Envoi = malloc(sizeof(struct message));
         
         /**
         *   Reception de message
         **/
-        retourTCP = receptionTCP(listeClients[indexClientCourant].socketClient, (char*)message_Recu);
+        retourTCP = receptionTCP(ceClient->socketClient, (char*)message_Recu);
         if( retourTCP != 1 ){
             fprintf(stderr,"%s:%s:%d: ERROR RECEPTION_TCP.\n",NOM_PRGRM,__FILE__,__LINE__);
             if(retourTCP == 0){
@@ -168,16 +134,10 @@ void * reception(void * param){
         /** ********************************* Modif mémoire partagée ****************************************** **/
         
         prendreTicket();
-        printf("\nDEBUT ECRITURE\n");
-        printf("nbMessages dans la memoire= %d | nbMessages connus par le client: %d\n",memoire[0].nbMessages,message_Recu->nbMessages);
-        
-        printf("MODIFICATION MEMOIRE\n");
         
         memoire[0].nbMessages++;
-        strcpy(memoire->commentaire.pseudo,message_Recu->pseudo);
-        strcpy(memoire->commentaire.text,message_Recu->text);
-        
-        printf("PREPARATION DONNEES A ENVOYER\n");
+        strcpy(memoire[(memoire[0].nbMessages - 1)].commentaire.pseudo,message_Recu->pseudo);
+        strcpy(memoire[(memoire[0].nbMessages - 1)].commentaire.text,message_Recu->text);
         
         message_Envoi->nbMessages = memoire[0].nbMessages;
         strcpy(message_Envoi->pseudo,memoire[(memoire[0].nbMessages - 1)].commentaire.pseudo);
@@ -188,11 +148,10 @@ void * reception(void * param){
         dernierMessageClient++;
         
         rendreTicket();
-        printf("FIN ECRITURE\n\n");
 
         /** ******************************* Fin Modif mémoire partagée ****************************************** **/
 
-        retourTCP = envoieTCP(listeClients[indexClientCourant].socketClient, (char*)message_Envoi);
+        retourTCP = envoieTCP(ceClient->socketClient, (char*)message_Envoi);
         
         if( retourTCP != 1 ){
              fprintf(stderr,"%s:%s:%d: ERROR RECEPTION_TCP.\n",NOM_PRGRM,__FILE__,__LINE__);
@@ -201,7 +160,6 @@ void * reception(void * param){
                  pthread_exit(NULL);
              }
         }
-        printf("MESSAGE ENVOYE\n\n");
         
         free(message_Recu);
         free(message_Envoi);
@@ -210,23 +168,24 @@ void * reception(void * param){
     pthread_exit(NULL);
 }
 
-
+/** ******************************************************************************** **/
+/**                                   FILS                                           **/
+/** ******************************************************************************** **/
 /**
  * Fonction principal de chaque fils 
  **/
-int fils(struct infosClient * listeClients, struct memoirePartagee * memoire, int indexClient){
+int fils(struct memoirePartagee * memoire){
 
     pthread_t thread;
-    struct paramThread * paramThread = malloc(sizeof(struct paramThread));
     struct message * message_Recu = malloc(sizeof(struct message));
     struct message * message_Envoi = malloc(sizeof(struct message));
-    char * ID = NULL;
     int retourTCP = 1;
+    dernierMessageClient = 0;
     
     
     /** ******************************** Etape Handshake ****************************************** **/
 
-    retourTCP = receptionTCP(listeClients[indexClient].socketClient,(char*) message_Recu);
+    retourTCP = receptionTCP(ceClient->socketClient,(char*) message_Recu);
     if( retourTCP != 1 ){
         fprintf(stderr,"%s:%s:%d: ERROR RECEPTION_TCP.\n",NOM_PRGRM,__FILE__,__LINE__);
         if(retourTCP == 0){
@@ -235,11 +194,9 @@ int fils(struct infosClient * listeClients, struct memoirePartagee * memoire, in
         }
     }
     
-    ID = attributionID(message_Recu,message_Envoi,listeClients[indexClient]);
+    attributionID(message_Recu,message_Envoi,*ceClient);
     
-    printf("[SERVEUR] Je lui donne le pseudo \"%s\"\n",message_Envoi->pseudo);
-    
-    retourTCP = envoieTCP(listeClients[indexClient].socketClient, (char*)message_Envoi);
+    retourTCP = envoieTCP(ceClient->socketClient, (char*)message_Envoi);
     
     if( retourTCP != 1 ){
         fprintf(stderr,"%s:%s:%d: ERROR ENVOI_TCP.\n",NOM_PRGRM,__FILE__,__LINE__);
@@ -255,19 +212,15 @@ int fils(struct infosClient * listeClients, struct memoirePartagee * memoire, in
     message_Envoi->nbMessages = memoire[0].nbMessages;
     
     if(memoire[0].nbMessages != 0){
-        printf("Recuperation messages handshake\n");
-        envoieManquant(message_Recu->nbMessages,indexClient,listeClients, memoire);
+        dernierMessageClient =  envoieManquant(dernierMessageClient,memoire);
     }
 
     rendreTicket();
     
     /** ******************************* Fin Etape Handshake ****************************************** **/
     
-    paramThread->memoire = memoire;
-    paramThread->listeClients = listeClients;
-    paramThread->index_client = indexClient;
-    
-    pthread_create(&thread,NULL,reception,(void *)paramThread); //Lancement du thread de reception de message
+    printf("%s s'est connecté.\n",message_Recu->pseudo);
+    pthread_create(&thread,NULL,reception,(void *)memoire); //Lancement du thread de reception de message
 
     /**
     * Boucle qui vérifie si le client est bien à jour
@@ -277,8 +230,7 @@ int fils(struct infosClient * listeClients, struct memoirePartagee * memoire, in
         if(memoire[0].nbMessages != 0){
             prendreTicket();
             if( memoire[0].nbMessages > dernierMessageClient){
-                printf("Boucle qui vérifie si le client est bien à jour\n");
-                envoieManquant((dernierMessageClient+1),indexClient,listeClients,memoire);
+                dernierMessageClient =  envoieManquant(dernierMessageClient,memoire);
             }
             rendreTicket();
         }
@@ -296,11 +248,9 @@ int main(int argc, char* argv[]){
     int port_Serveur = 0;
     int socket_client = 0;
     struct memoirePartagee * memoire = NULL;
-    struct infosClient * listeClients = NULL;
     socklen_t longueurAdresse = (socklen_t) sizeof(struct sockaddr);
 
     key_t keyMemoire = getKey(MEMOIRE);
-    key_t keyClients = getKey((MEMOIRE+1));
     key_t keySem = getKey(SEMAPHORE);
     
     idSem = creaSem(keySem,1);
@@ -310,34 +260,20 @@ int main(int argc, char* argv[]){
     init_sem(idSem,0,1,sem);
 
     int idMemoire = init_shm(keyMemoire,sizeof(struct memoirePartagee)*N);
-    int idListeClient = init_shm(keyClients,sizeof(struct infosClient)*N);
     
     /**
-    *   Attachement a la memoire partagee et a la liste de clients
+    *   Attachement a la memoire partagee
     **/
-    listeClients = shmat(idListeClient, NULL, 0);
-    if( errno != 0){
-        perror("Error SHMAT ");
-        exit(EXIT_FAILURE);
-    }
-    
-    memoire = shmat(idMemoire, NULL, 0);
-    if( errno != 0){
-        perror("Error SHMAT ");
-        exit(EXIT_FAILURE);
-    }
+    memoire = attachement(idMemoire);
     
     /**
     *   Initialisation valeurs
     **/
     for(int i = 0; i<N;i++){
-        listeClients[i].nbClients = 0;
-        listeClients[i].socketClient = 0;
         memoire[i].nbMessages = 0;
     }
     
     detachement(memoire);
-    detachement(listeClients);
 
     strcpy(NOM_PRGRM, argv[0]);
     
@@ -386,36 +322,25 @@ int main(int argc, char* argv[]){
 
         if(fork() == 0){
             struct memoirePartagee * memoire = NULL;
-            struct infosClient * listeClients = NULL;
+            ceClient = malloc(sizeof(struct infosClient));
             
+           ceClient->socketClient = socket_client;
+           ceClient->adresseClient = tempAddr;
             /**
             *   Attachement a la memoire partagee et a la liste de clients
             **/
-            listeClients = shmat(idListeClient, NULL, 0);
-            if( errno != 0){
-                perror("Error SHMAT ");
-                exit(EXIT_FAILURE);
-            }
             
-            memoire = shmat(idMemoire, NULL, 0);
-            if( errno != 0){
-                perror("Error SHMAT ");
-                exit(EXIT_FAILURE);
-            }
-            listeClients[0].nbClients++;
-
-            listeClients[listeClients[0].nbClients].adresseClient = tempAddr;
-            listeClients[listeClients[0].nbClients].socketClient = socket_client;
+            memoire = attachement(idMemoire);
             
             /*printf("Voulez vous continuez ? O / N \n");
             scanf("%c",&continuer);
             if( continuer == 'N' || continuer == 'n'){
             end = -1;
             }*/
-            fils(listeClients, memoire, (listeClients[0].nbClients - 1) );
+            
+            fils(memoire);
         }
     }
-        
     
     close(socket_locale);
     destruction(idMemoire);
