@@ -85,9 +85,8 @@ int init_shm(key_t key, size_t size);
 * Permet a un processus de s'attacher a une zone de memoire partagee
 *          --> Modifier le type de retour en fonction <--
 *          --> du type de ce que l'on veut manipuler <--
-* Inutilisable dans le cas du projet de pcr
 ****************************************************************** **/
-//struct memoirePartagee * attachement(int shm_id);
+struct memoirePartagee * attachement(int shm_id);
 
 /** 
 * Detache le processus courant de la zone de memoire 
