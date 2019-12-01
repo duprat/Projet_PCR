@@ -1,6 +1,6 @@
 #include "common.h"
 
-int dernierMessage;
+int dernierMessage = 0;
 char monPseudo[N];
 char monID[N];
 
@@ -34,12 +34,12 @@ void * reception(void * param){
             printf("Entrez votre message.\n");
         }
         else{
-            printf("Il reste %d messages non lus.\n",(messageRecu->dernierMessage - dernierMessage));
+            printf("Il reste %d messages non lus.\n",(messageRecu->nbMessages - dernierMessage));
             printf("%s:\n",messageRecu->pseudo);
             printf("  %s\n",messageRecu->text);
             printf("\nEntrez votre message.\n");
         }
-        dernierMessage = messageRecu->numero;
+        dernierMessage++;
         free(messageRecu);
     }
     pthread_exit(NULL);
@@ -52,7 +52,6 @@ int main(int argc, char** argv) {
     int socket_locale = 0;
     int port_Serveur = 0;
     int retourTCP = 0;
-    dernierMessage = 1;
     char nom_serveur[N];
     struct message * messageEnvoie;
     struct sockaddr * adresse_Serveur = malloc(sizeof(struct sockaddr));
@@ -120,7 +119,6 @@ int main(int argc, char** argv) {
     
     /** ******************************** Etape Handshake ****************************************** **/
     messageEnvoie = malloc(sizeof(struct message));
-    messageEnvoie->numero = 0;
     strcpy(messageEnvoie->pseudo,monPseudo);
     strcpy(messageEnvoie->text,"handshake");
     
@@ -151,8 +149,7 @@ int main(int argc, char** argv) {
         strcpy(messageEnvoie->pseudo,monPseudo);
         printf("Entrez votre message.\n");
         saisieClavier(messageEnvoie->text);
-        messageEnvoie->numero = dernierMessage;
-        messageEnvoie->dernierMessage = dernierMessage - 1;
+        messageEnvoie->nbMessages = dernierMessage;
         /**
         * Envoie d'un message
         **/
