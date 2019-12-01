@@ -45,7 +45,9 @@ union sem_union{
 struct infosClient{
     int nbClients;
     int socketClient;
+    int posClient;
     struct sockaddr adresseClient;
+    struct infosClient * client_suivant;
 };
 
 /**
@@ -53,20 +55,23 @@ struct infosClient{
 * veut a l'interieur, en TCP et UDP
 **/
 struct message{
-    int nbMessages;
+    int dernierMessage; 
+    int numero;
     char pseudo[N];
     char text[N];
 };
 
 struct memoirePartagee{
     int nbMessages;
+    int numeroMessage;
     struct message commentaire;
+    struct memoirePartagee * suivant;
 };
 
 struct paramThread{
     struct memoirePartagee * memoire;
-    int index_client;
-    struct infosClient * listeClients;
+    struct infosClient * client_courant;
+    struct infosClient * premier_client;
 };
 
 /**

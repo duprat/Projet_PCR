@@ -6,44 +6,61 @@
 #include <stdlib.h>
 
 int main( int argc, char* argv[]){
+
+
+    int condition = 1;
+
+    int cpt = 1;
+
+    while( condition ){
+
+        key_t cleSemaphore = ftok(".",cpt);
+
+        if( cleSemaphore == -1 ){
+            perror("Erreur clé Semaphore\n");
+            return -1;
+        }
+
+        int idSemaphore = semget(cleSemaphore,0,0666);
+
+        if( idSemaphore == -1 ){
+            condition = 0;
+        }
+
+        if( semctl(idSemaphore,0,IPC_RMID) == -1 ){
+            condition = 0;
+        }else{
+            cpt++;
+        }
+    }
     
-    key_t cleSemaphore = ftok(".",1);
+    condition = 1;
 
-    if( cleSemaphore == -1 ){
-        perror("Erreur clé Semaphore\n");
-        return -1;
+    cpt = 10;
+
+    while ( cpt < 20 )
+    {   
+        key_t cleSegment = ftok(".",cpt);
+
+        if( cleSegment == -1 ){
+            perror("Erreur clé Segement\n");
+            return -1;
+        }
+
+        int idSegment = shmget(cleSegment,sizeof(int),IPC_CREAT|0666);
+
+        if( idSegment == -1 ){
+            condition = 0;
+        }
+
+        if( shmctl(idSegment,IPC_RMID,NULL) == -1 ){
+            condition = 0;
+        }else
+        {
+                        cpt++;
+        }
     }
-
-    int idSemaphore = semget(cleSemaphore,0,0666);
-
-    if( idSemaphore == -1 ){
-        perror("Erreur id Sémaphore\n");
-        return -1;
-    }
-
-    if( semctl(idSemaphore,0,IPC_RMID) == -1 ){
-        perror("Erreur destruction Sémaphore.\n");
-        return -1;
-    }
-
-    key_t cleSegment = ftok(".",2);
-
-    if( cleSegment == -1 ){
-        perror("Erreur clé Segement\n");
-        return -1;
-    }
-
-    int idSegment = shmget(cleSegment,sizeof(int),IPC_CREAT|0666);
-
-    if( idSegment == -1 ){
-        perror("Erreur id Segement\b");
-        return -1;
-    }
-
-    if( shmctl(idSegment,IPC_RMID,NULL) == -1 ){
-        perror("Erreur destruction Mémoire partagées?\n");
-    }
-
+  
 
     return 0;
 }

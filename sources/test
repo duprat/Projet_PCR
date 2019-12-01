@@ -1,0 +1,30 @@
+
+void * ecoute_reception(void *){
+    // je suis le thread d'ecoute de ecoute reception
+    prend ticket
+        reception
+    rend ticket
+}
+
+
+int main(){
+    // Je suis le pere
+
+    if(fork()==0){
+        // Je suis le fils
+
+        pthread_create(thread,NULL,ecoute_mise_a_jour,NULL);
+
+        pthread_create(thread,NULL,ecoute_reception,NULL);
+
+        while ( 1 ){
+                    void * ecoute_mise_a_jour(void *){
+                // je suis le thread d'ecoute de mise a jour
+                prend ticket 
+                    mise a jour 
+                rend ticket
+            }
+        }
+
+    }
+}
