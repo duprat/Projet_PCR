@@ -174,8 +174,8 @@ void * reception(void * param){
         printf("MODIFICATION MEMOIRE\n");
         
         memoire[0].nbMessages++;
-        strcpy(memoire->commentaire.pseudo,message_Recu->pseudo);
-        strcpy(memoire->commentaire.text,message_Recu->text);
+        strcpy(memoire[(memoire[0].nbMessages - 1)].commentaire.pseudo,message_Recu->pseudo);
+        strcpy(memoire[(memoire[0].nbMessages - 1)].commentaire.text,message_Recu->text);
         
         printf("PREPARATION DONNEES A ENVOYER\n");
         
