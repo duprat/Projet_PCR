@@ -105,15 +105,18 @@ int envoieManquant(int nbMessagesClient, int indexClient,struct infosClient * li
     int retourTCP = 1;
     struct message * message_Envoi = malloc(sizeof(struct message));
     
-    printf("ENVOIE MANQUANT debut\n");
-    printf("nbMessages client = %d || nbMessages mémoire = %d \n",nbMessagesClient,memoire[0].nbMessages);
+    printf("[%d] ENVOIE MANQUANT debut\n",getpid());
+    printf("[%d] nbMessages client = %d || nbMessages mémoire = %d \n",getpid(),nbMessagesClient,memoire[0].nbMessages);
     
     if(memoire[0].nbMessages != 0){
-        for( int i = (nbMessagesClient - 1); i < memoire[0].nbMessages; i++){ // Envoie chaque message non connu du client
-            printf("Envoie du message numero = %d\n",i);
+        for( int i = nbMessagesClient; i < memoire[0].nbMessages; i++){ // Envoie chaque message non connu du client
+            printf("[%d] Envoie du message numero = %d\n",getpid(),i);
 
             strcpy(message_Envoi->pseudo,memoire[i].commentaire.pseudo);
             strcpy(message_Envoi->text,memoire[i].commentaire.text);
+            
+            printf("[%d] Message -> %s \n",getpid(),message_Envoi->text);
+            printf("[%d] socket du client -> %d\n",getpid(),listeClients[indexClient].socketClient);
 
             retourTCP = envoieTCP(listeClients[indexClient].socketClient,(char *)message_Envoi);
             if( retourTCP != 1 ){
@@ -126,11 +129,12 @@ int envoieManquant(int nbMessagesClient, int indexClient,struct infosClient * li
         }
     }
     else{
-        printf("Aucun message en memoire.\n");
+        printf("[%d] Aucun message en memoire.\n",getpid());
     }
     free(message_Envoi);
-    printf("SORTIE Envoie Manaquant\n");
-    return 0;
+    dernierMessageClient = memoire[0].nbMessages;
+    printf("[%d] SORTIE Envoie Manaquant\n",getpid());
+    return memoire[0].nbMessages;
 }
 
 void * reception(void * param){
@@ -146,7 +150,7 @@ void * reception(void * param){
 
     while(1){
         
-        printf("\n\nDEBUT RECEPTION\n");
+        printf("\n\n[%d] DEBUT RECEPTION\n",getpid());
         
         message_Recu = malloc(sizeof(struct message));
         message_Envoi = malloc(sizeof(struct message));
@@ -168,16 +172,16 @@ void * reception(void * param){
         /** ********************************* Modif mémoire partagée ****************************************** **/
         
         prendreTicket();
-        printf("\nDEBUT ECRITURE\n");
-        printf("nbMessages dans la memoire= %d | nbMessages connus par le client: %d\n",memoire[0].nbMessages,message_Recu->nbMessages);
+        printf("\n[%d] DEBUT ECRITURE\n",getpid());
+        printf("[%d] nbMessages dans la memoire= %d | nbMessages connus par le client: %d\n",getpid(),memoire[0].nbMessages,message_Recu->nbMessages);
         
-        printf("MODIFICATION MEMOIRE\n");
+        printf("[%d] MODIFICATION MEMOIRE\n",getpid());
         
         memoire[0].nbMessages++;
         strcpy(memoire[(memoire[0].nbMessages - 1)].commentaire.pseudo,message_Recu->pseudo);
         strcpy(memoire[(memoire[0].nbMessages - 1)].commentaire.text,message_Recu->text);
         
-        printf("PREPARATION DONNEES A ENVOYER\n");
+        printf("[%d] PREPARATION DONNEES A ENVOYER\n",getpid());
         
         message_Envoi->nbMessages = memoire[0].nbMessages;
         strcpy(message_Envoi->pseudo,memoire[(memoire[0].nbMessages - 1)].commentaire.pseudo);
@@ -188,7 +192,7 @@ void * reception(void * param){
         dernierMessageClient++;
         
         rendreTicket();
-        printf("FIN ECRITURE\n\n");
+        printf("[%d] FIN ECRITURE\n\n",getpid());
 
         /** ******************************* Fin Modif mémoire partagée ****************************************** **/
 
@@ -201,7 +205,7 @@ void * reception(void * param){
                  pthread_exit(NULL);
              }
         }
-        printf("MESSAGE ENVOYE\n\n");
+        printf("[%d] MESSAGE ENVOYE\n\n",getpid());
         
         free(message_Recu);
         free(message_Envoi);
@@ -210,7 +214,9 @@ void * reception(void * param){
     pthread_exit(NULL);
 }
 
-
+/** ******************************************************************************** **/
+/**                                   FILS                                           **/
+/** ******************************************************************************** **/
 /**
  * Fonction principal de chaque fils 
  **/
@@ -222,6 +228,7 @@ int fils(struct infosClient * listeClients, struct memoirePartagee * memoire, in
     struct message * message_Envoi = malloc(sizeof(struct message));
     char * ID = NULL;
     int retourTCP = 1;
+    dernierMessageClient = 0;
     
     
     /** ******************************** Etape Handshake ****************************************** **/
@@ -255,8 +262,8 @@ int fils(struct infosClient * listeClients, struct memoirePartagee * memoire, in
     message_Envoi->nbMessages = memoire[0].nbMessages;
     
     if(memoire[0].nbMessages != 0){
-        printf("Recuperation messages handshake\n");
-        envoieManquant(message_Recu->nbMessages,indexClient,listeClients, memoire);
+        printf("[%d] Recuperation messages handshake\n",getpid());
+        dernierMessageClient =  envoieManquant(dernierMessageClient,indexClient,listeClients, memoire);
     }
 
     rendreTicket();
@@ -277,8 +284,9 @@ int fils(struct infosClient * listeClients, struct memoirePartagee * memoire, in
         if(memoire[0].nbMessages != 0){
             prendreTicket();
             if( memoire[0].nbMessages > dernierMessageClient){
-                printf("Boucle qui vérifie si le client est bien à jour\n");
-                envoieManquant((dernierMessageClient+1),indexClient,listeClients,memoire);
+                printf("[%d] DERNIER MESSAGE CLIENT  = %d | nbMessageMemoire = %d\n",getpid(),dernierMessageClient,memoire[0].nbMessages);
+                printf("[%d] Boucle qui vérifie si le client est bien à jour\n",getpid());
+                dernierMessageClient =  envoieManquant(dernierMessageClient,indexClient,listeClients,memoire);
             }
             rendreTicket();
         }
