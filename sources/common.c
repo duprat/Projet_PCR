@@ -241,7 +241,7 @@ void showAddress(struct sockaddr * address){
 **/
 int receptionTCP(int socket,char * message){
     int index = 0;
-    long int taille = sizeof(message);
+    long int taille = sizeof(struct message);
     do{
         int tempRCV = 0;
         taille -= index;
@@ -266,11 +266,11 @@ int receptionTCP(int socket,char * message){
 **/
 int envoieTCP(int socket, char * message){
     int index = 0;
-    long int taille = sizeof(message);
+    long int taille = sizeof(struct message);
     do{
         int tempRCV = 0;
         taille -= index;
-        index += send(socket,&message[index], taille, 0);
+        tempRCV = send(socket,&message[index], taille, 0);
         if(tempRCV == 0){
             fprintf(stderr,"%s:%s:%d: SOCKET FERMEE.\n",NOM_PRGRM,__FILE__,__LINE__);
 		    return 0;
@@ -292,4 +292,9 @@ void saisieClavier(char * string){
         i++;
     }
     string[i] = '\0';
+}
+
+char * messageToString(struct message * m){
+    
+    
 }

@@ -1,13 +1,16 @@
 all: client serveur
 
-client: client.c
+client: client.c common.o common.h
 	gcc client.c common.o -o client -Wall -lpthread
 
-serveur: serveur.c 
+serveur: serveur.c common.o common.h
 	gcc serveur.c common.o -o serveur -Wall -lpthread
 
-clean:	
-	./destruction
-	rm  serveur client
+common.o: common.c common.h
+	gcc -c common.c -Wall
+
+clean:
+	rm -rf common.o serveur client
 	clear
+	
 				
