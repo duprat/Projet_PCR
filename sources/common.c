@@ -247,11 +247,9 @@ int receptionTCP(int socket,char * message){
         taille -= index;
         tempRCV = recv(socket,&message[index],taille,0);
         if(tempRCV == 0){
-            fprintf(stderr,"%s:%s:%d: SOCKET FERMEE.\n",NOM_PRGRM,__FILE__,__LINE__);
 		    return 0;
         }
         if(tempRCV == -1){
-            fprintf(stderr,"%s:%s:%d: ERROR RECEPTION_TCP.\n",NOM_PRGRM,__FILE__,__LINE__);
             return -1;
         }
         index += tempRCV;
@@ -272,11 +270,9 @@ int envoieTCP(int socket, char * message){
         taille -= index;
         tempRCV = send(socket,&message[index], taille, 0);
         if(tempRCV == 0){
-            fprintf(stderr,"%s:%s:%d: SOCKET FERMEE.\n",NOM_PRGRM,__FILE__,__LINE__);
 		    return 0;
         }
         if(tempRCV == -1){
-            fprintf(stderr,"%s:%s:%d: ERROR ENVOI_TCP.\n",NOM_PRGRM,__FILE__,__LINE__);
             return -1;
         }
         index += tempRCV;
@@ -293,3 +289,44 @@ void saisieClavier(char * string){
     }
     string[i] = '\0';
 }
+
+/** 
+ *  affichage du message et de son envoyeur
+ **/ 
+void affichageMessage(struct message * message){
+    printf("\033[35m");
+    for(int i = 0; i < 20 && message->pseudo[i] != ' ';i++){
+        printf("%c",message->pseudo[i]);
+    }
+    printf(":");
+    printf("\033[00m");
+    printf("\n");
+    printf("\033[33m");
+    printf("\t%s\n",message->text);
+    printf("\033[00m");
+}
+
+/** 
+ *  deuxieme version d'affichage du message et de son envoyeur
+ **/ 
+void affichageMessage2(struct message * message){
+    printf("[");
+    for(int i = 0; message->pseudo[i] != ' ';i++){
+        printf("%c",message->pseudo[i]);
+    }
+    printf("] %s\n",message->text);
+}
+
+/**
+ *  Récupère le pseudo
+ **/
+void affichagePseudo(char * pseudo){
+    char retour[20];
+    int i = 0;
+    for(i = 0; pseudo[i] != ' ';i++){
+            retour[i] = pseudo[i];
+        }
+    printf("%s",retour);
+}
+
+
