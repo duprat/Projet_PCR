@@ -309,24 +309,40 @@ void affichageMessage(struct message * message){
 /** 
  *  deuxieme version d'affichage du message et de son envoyeur
  **/ 
-void affichageMessage2(struct message * message){
-    printf("[");
-    for(int i = 0; message->pseudo[i] != ' ';i++){
-        printf("%c",message->pseudo[i]);
+void affichageMessage2(struct message * message, char * monPseudo){
+    if(monPseudo == NULL){
+        printf("[");
+         for(int i = 0; i<20 && message->pseudo[i] != ' ';i++){
+             printf("%c",message->pseudo[i]);
+         }
+         printf("] %s\n",message->text);
     }
-    printf("] %s\n",message->text);
+    else{
+        if(monPseudo == NULL || strcmp(message->pseudo,monPseudo) != 0){
+            printf("\033[35m[");
+            for(int i = 0; i<20 && message->pseudo[i] != ' ';i++){
+                printf("%c",message->pseudo[i]);
+            }
+            printf("]\033[00m \n\t \033[33m%s\033[00m\n",message->text);
+        }
+        else{
+            printf("\033[34m[");
+            for(int i = 0; i<20 && message->pseudo[i] != ' ';i++){
+                printf("%c",message->pseudo[i]);
+            }
+            printf("]\033[00m \n\t \033[33m%s\033[00m\n",message->text);
+        }
+    }
+    
 }
 
 /**
  *  Récupère le pseudo
  **/
 void affichagePseudo(char * pseudo){
-    char retour[20];
-    int i = 0;
-    for(i = 0; pseudo[i] != ' ';i++){
-            retour[i] = pseudo[i];
-        }
-    printf("%s",retour);
+    for(int i = 0; i< 20 && pseudo[i] != ' ';i++){
+            printf("%c",pseudo[i]);
+    }
 }
 
 

@@ -70,7 +70,7 @@ void affichageMemoire(struct memoirePartagee * memoire){
         printf("| DEBUT AFFICHAGE MEMOIRE |\n");
         printf(" -------------------------\n");
         for(int i = 0;i<memoire[0].nbMessages;i++){
-            affichageMessage2(&memoire[i].commentaire);
+            affichageMessage2(&memoire[i].commentaire,NULL);
         }
         printf(" -----------------------\n");
         printf("| FIN AFFICHAGE MEMOIRE |\n");

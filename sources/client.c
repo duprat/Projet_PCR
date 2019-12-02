@@ -9,7 +9,7 @@ struct message memoire[50] ;
 
 void affichage(){
     for( int i = 0; i < dernierMessage; i++){
-        affichageMessage2(&memoire[i]);
+        affichageMessage2(&memoire[i],monPseudo);
     }
 }
 
@@ -67,7 +67,7 @@ void * reception(void * param){
         dernierMessage++;
         system("clear");
         affichage();
-        printf("\nEntrez votre message -> \n");
+        printf("\nEntrez votre message\n");
         free(messageRecu);
     }
     pthread_exit(NULL);
