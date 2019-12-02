@@ -221,10 +221,9 @@ int fils(struct memoirePartagee * memoire){
     }
     
     prendreTicket();
-    
     affichageMemoire(memoire);
     message_Envoi->nbMessages = memoire[0].nbMessages;
-    
+
     if(memoire[0].nbMessages != 0){
         dernierMessageClient =  envoieManquant(dernierMessageClient,memoire);
     }
