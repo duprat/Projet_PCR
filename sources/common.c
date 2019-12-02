@@ -306,4 +306,27 @@ void affichageMessage(struct message * message){
     printf("\033[00m");
 }
 
+/** 
+ *  deuxieme version d'affichage du message et de son envoyeur
+ **/ 
+void affichageMessage2(struct message * message){
+    printf("[");
+    for(int i = 0; message->pseudo[i] != ' ';i++){
+        printf("%c",message->pseudo[i]);
+    }
+    printf("] %s\n",message->text);
+}
+
+/**
+ *  Récupère le pseudo
+ **/
+void affichagePseudo(char * pseudo){
+    char retour[20];
+    int i = 0;
+    for(i = 0; pseudo[i] != ' ';i++){
+            retour[i] = pseudo[i];
+        }
+    printf("%s",retour);
+}
+
 

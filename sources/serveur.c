@@ -8,6 +8,7 @@ int dernierMessageClient = 0;
 int idSem = 0;
 int end = 0;
 struct infosClient * ceClient = NULL;
+int terminaison = 1;
 
 /**
  * prend un ticket pour l'accès a la mémoire
@@ -58,15 +59,18 @@ char * attributionID(struct message * message_Recu, struct message * message_Env
     return ID;
 }
 
-/** ****************************************** AFFICHAGE ******************************************** **/
+/** *********************************************************************
+ *                              AFFICHAGE                               *
+ ********************************************************************* **/
 
 void affichageMemoire(struct memoirePartagee * memoire){
+    //system("clear");
     if(memoire[0].nbMessages != 0){
-        printf("\n-------------------------\n");
+        printf("\n  -------------------------\n");
         printf("| DEBUT AFFICHAGE MEMOIRE |\n");
         printf(" -------------------------\n");
         for(int i = 0;i<memoire[0].nbMessages;i++){
-            printf("[%s] %s\n",memoire[i].commentaire.pseudo,memoire[i].commentaire.text);
+            affichageMessage2(&memoire[i].commentaire);
         }
         printf(" -----------------------\n");
         printf("| FIN AFFICHAGE MEMOIRE |\n");
@@ -74,8 +78,6 @@ void affichageMemoire(struct memoirePartagee * memoire){
     }
     
 }
-
-/** ****************************************** FIN AFFICHAGE ******************************************** **/
 
 /**
  * Envoie a partir de la position donnée en paramètre tous les messages manquant au client
@@ -109,6 +111,11 @@ int envoieManquant(int nbMessagesClient, struct memoirePartagee * memoire){
     return memoire[0].nbMessages;
 }
 
+
+/** *********************************************************************
+ *                              RECEPTION                               *
+ ********************************************************************* **/
+
 void * reception(void * param){
 
     struct memoirePartagee * memoire = param;
@@ -131,11 +138,10 @@ void * reception(void * param){
             if(retourTCP == 0){
                 fprintf(stderr,"%s:%s:%d: SOCKET CLOSED.\n",NOM_PRGRM,__FILE__,__LINE__);
                 printf("[%d] Client deconnecté.\n",getpid());
+                terminaison = 0;
                 pthread_exit(NULL);
             }
         }
-         
-         affichageMessage(message_Recu);
          
         /** ********************************* Modif mémoire partagée ****************************************** **/
         
@@ -162,8 +168,10 @@ void * reception(void * param){
         if( retourTCP != 1 ){
              fprintf(stderr,"%s:%s:%d: ERROR RECEPTION_TCP.\n",NOM_PRGRM,__FILE__,__LINE__);
              if(retourTCP == 0){
-                 fprintf(stderr,"%s:%s:%d: SOCKET CLOSED.\n",NOM_PRGRM,__FILE__,__LINE__);
-                 pthread_exit(NULL);
+                fprintf(stderr,"%s:%s:%d: SOCKET CLOSED.\n",NOM_PRGRM,__FILE__,__LINE__); 
+                printf("[%d] Client deconnecté.\n",getpid());
+                terminaison = 0;
+                pthread_exit(NULL);
              }
         }
         
@@ -196,7 +204,7 @@ int fils(struct memoirePartagee * memoire){
         fprintf(stderr,"%s:%s:%d: ERROR RECEPTION_TCP.\n",NOM_PRGRM,__FILE__,__LINE__);
         if(retourTCP == 0){
             fprintf(stderr,"%s:%s:%d: SOCKET CLOSED.\n",NOM_PRGRM,__FILE__,__LINE__);
-            return -1;
+            return 0;
         }
     }
     
@@ -208,7 +216,7 @@ int fils(struct memoirePartagee * memoire){
         fprintf(stderr,"%s:%s:%d: ERROR ENVOI_TCP.\n",NOM_PRGRM,__FILE__,__LINE__);
         if(retourTCP == 0){
             fprintf(stderr,"%s:%s:%d: SOCKET CLOSED.\n",NOM_PRGRM,__FILE__,__LINE__);
-            return -1;
+            return 0;
         }
     }
     
@@ -225,13 +233,14 @@ int fils(struct memoirePartagee * memoire){
     
     /** ******************************* Fin Etape Handshake ****************************************** **/
     
-    printf("%s s'est connecté.\n",message_Recu->pseudo);
+    affichagePseudo(message_Recu->pseudo);
+    printf(" s'est connecté.\n");
     pthread_create(&thread,NULL,reception,(void *)memoire); //Lancement du thread de reception de message
 
     /**
     * Boucle qui vérifie si le client est bien à jour
     **/
-    while ( 1 ) 
+    while ( terminaison ) 
     {
         if(memoire[0].nbMessages != 0){
             prendreTicket();
@@ -241,6 +250,7 @@ int fils(struct memoirePartagee * memoire){
             rendreTicket();
         }
     }
+    return 0;
 }
 
 
@@ -300,7 +310,7 @@ int main(int argc, char* argv[]){
     **/
     socket_locale = creerSocket(AF_INET,SOCK_STREAM,port_Serveur);
 
-    while( end != 1 ){
+    while( terminaison ){
         //char continuer  = 'O';
         printf("[SERVEUR] Attente de connexion d'un client.\n");
         struct sockaddr tempAddr;
@@ -340,13 +350,16 @@ int main(int argc, char* argv[]){
             
             memoire = attachement(idMemoire);
             
-            fils(memoire);
+            terminaison = fils(memoire);
         }
     }
 /** ************************************* FIN FILS **************************************** **/
-    close(socket_locale);
-    destruction(idMemoire);
-    destruction(idSem);
+    
+    printf("[%d] terminé TERMINE.\n",getpid());
+    if( terminaison ){
+        close(socket_locale);
+        destruction(idMemoire);
+    }
 
     return 0;
 }

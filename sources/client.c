@@ -3,6 +3,15 @@
 int dernierMessage = 0;
 char monPseudo[N];
 char monID[N];
+int terminaison = 1;
+struct message memoire[50] ;
+
+
+void affichage(){
+    for( int i = 0; i < dernierMessage; i++){
+        affichageMessage2(&memoire[i]);
+    }
+}
 
 void * reception(void * param){
     struct message * messageRecu;
@@ -29,14 +38,9 @@ void * reception(void * param){
         /**
         *   Traitement du message recu
         **/
-        
-        if(strcmp(ID,monID)==0){
-            system("clear");
-            printf("\033[34m════════════════════════ ✔ ════════════════════════");
-            printf("\n\033[00mMon message \033[33m\"%s\" \033[00ma bien été enregistré.\n",messageRecu->text);
-            printf("\033[34m════════════════════════ ✔ ════════════════════════\n");
-            printf("\033[00m");
-            printf("Entrez votre message\n");
+        /*if(strcmp(ID,monID)==0){
+            printf("\nMon message \"%s\" a bien été enregistré.\n",messageRecu->text);
+            printf("\nEntrez votre message -> \n");
         }
         else{
             printf("\n\033[34m════════════════════════ ✉ ════════════════════════\n");
@@ -45,12 +49,25 @@ void * reception(void * param){
             printf("\033[34m════════════════════════ ✉ ════════════════════════");
             printf("\033[00m");
             printf("\nIl reste %d messages non lus.\n",(messageRecu->nbMessages - dernierMessage));
-            if((messageRecu->nbMessages - dernierMessage) == 0){
-                printf("Entrez votre message\n");
-            }
-        }
+            affichageMessage(messageRecu);
+            printf("\nEntrez votre message -> \n");
+        }*/
         
+        if( dernierMessage > 50 ){
+            for( int i = 0; i < dernierMessage-1; i++ ){
+                strcpy(memoire[i].text,memoire[i+1].text);
+                strcpy(memoire[i].pseudo,memoire[i+1].pseudo);
+                memoire[i].nbMessages = memoire[i+1].nbMessages;
+            }
+            dernierMessage--;
+        }
+        strcpy(memoire[dernierMessage].text,messageRecu->text);
+        strcpy(memoire[dernierMessage].pseudo,messageRecu->pseudo);
+        memoire[dernierMessage].nbMessages = messageRecu->nbMessages;
         dernierMessage++;
+        system("clear");
+        affichage();
+        printf("\nEntrez votre message -> \n");
         free(messageRecu);
     }
     pthread_exit(NULL);
@@ -163,18 +180,18 @@ int main(int argc, char** argv) {
 
    //signal(SIGINT,handler);  
 
-    while( 1 ){
+    printf("\nEntrez votre message -> ");
+    while( terminaison ){
         messageEnvoie = malloc(sizeof(struct message));
         strcpy(messageEnvoie->pseudo,monPseudo);
-        printf("\nEntrez votre message\n");
         saisieClavier(messageEnvoie->text);
+        system("clear");
         messageEnvoie->nbMessages = dernierMessage;
         
         /**
         * Envoie d'un message
         **/
         retourTCP = envoieTCP(socket_locale,(char*) messageEnvoie);
-        
         free(messageEnvoie);
     }
     
