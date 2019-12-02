@@ -294,10 +294,55 @@ void saisieClavier(char * string){
  *  affichage du message et de son envoyeur
  **/ 
 void affichageMessage(struct message * message){
-    for(int i = 0; message->pseudo[i] != ' ';i++){
+    printf("\033[35m");
+    for(int i = 0; i < 20 && message->pseudo[i] != ' ';i++){
         printf("%c",message->pseudo[i]);
     }
-    printf(" a dit: %s\n",message->text);
+    printf(":");
+    printf("\033[00m");
+    printf("\n");
+    printf("\033[33m");
+    printf("\t%s\n",message->text);
+    printf("\033[00m");
+}
+
+/** 
+ *  deuxieme version d'affichage du message et de son envoyeur
+ **/ 
+void affichageMessage2(struct message * message, char * monPseudo){
+    if(monPseudo == NULL){
+        printf("[");
+         for(int i = 0; i<20 && message->pseudo[i] != ' ';i++){
+             printf("%c",message->pseudo[i]);
+         }
+         printf("] %s\n",message->text);
+    }
+    else{
+        if(monPseudo == NULL || strcmp(message->pseudo,monPseudo) != 0){
+            printf("\033[35m[");
+            for(int i = 0; i<20 && message->pseudo[i] != ' ';i++){
+                printf("%c",message->pseudo[i]);
+            }
+            printf("]\033[00m \n\t \033[33m%s\033[00m\n",message->text);
+        }
+        else{
+            printf("\033[34m[");
+            for(int i = 0; i<20 && message->pseudo[i] != ' ';i++){
+                printf("%c",message->pseudo[i]);
+            }
+            printf("]\033[00m \n\t \033[33m%s\033[00m\n",message->text);
+        }
+    }
+    
+}
+
+/**
+ *  Récupère le pseudo
+ **/
+void affichagePseudo(char * pseudo){
+    for(int i = 0; i< 20 && pseudo[i] != ' ';i++){
+            printf("%c",pseudo[i]);
+    }
 }
 
 

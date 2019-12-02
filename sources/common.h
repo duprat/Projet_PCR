@@ -179,5 +179,12 @@ void saisieClavier(char * string);
  **/ 
 void affichageMessage(struct message * message);
 
+/** 
+ *  deuxieme version d'affichage du message et de son envoyeur
+ **/ 
+void affichageMessage2(struct message * message,char * monPseudo);
+
+void affichagePseudo(char * pseudo);
+
 
 #endif
