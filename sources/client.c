@@ -3,7 +3,6 @@
 int dernierMessage = 0;
 char monPseudo[N];
 char monID[N];
-int terminaison = 1;
 
 void * reception(void * param){
     struct message * messageRecu;
@@ -30,14 +29,25 @@ void * reception(void * param){
         /**
         *   Traitement du message recu
         **/
+        
         if(strcmp(ID,monID)==0){
-            printf("\nMon message \"%s\" a bien été enregistré.\n",messageRecu->text);
-            printf("\nEntrez votre message -> \n");
+            system("clear");
+            printf("\033[34m════════════════════════ ✔ ════════════════════════");
+            printf("\n\033[00mMon message \033[33m\"%s\" \033[00ma bien été enregistré.\n",messageRecu->text);
+            printf("\033[34m════════════════════════ ✔ ════════════════════════\n");
+            printf("\033[00m");
+            printf("Entrez votre message\n");
         }
         else{
-            printf("\nIl reste %d messages non lus.\n",(messageRecu->nbMessages - dernierMessage));
+            printf("\n\033[34m════════════════════════ ✉ ════════════════════════\n");
+            printf("\033[00m");
             affichageMessage(messageRecu);
-            printf("\nEntrez votre message -> \n");
+            printf("\033[34m════════════════════════ ✉ ════════════════════════");
+            printf("\033[00m");
+            printf("\nIl reste %d messages non lus.\n",(messageRecu->nbMessages - dernierMessage));
+            if((messageRecu->nbMessages - dernierMessage) == 0){
+                printf("Entrez votre message\n");
+            }
         }
         
         dernierMessage++;
@@ -49,7 +59,7 @@ void * reception(void * param){
 void handler(int sig) 
 { 
     printf("Caught signal %d\n", sig);
-    terminaison = 0; 
+    exit(0);
 } 
 
 int main(int argc, char** argv) {
@@ -93,11 +103,17 @@ int main(int argc, char** argv) {
     /**
     * Initialisation du pseudo du serveur
     **/
-    printf("Entrez votre pseudo -> ");
-    saisieClavier(monPseudo);
-    while( strlen(monPseudo) > 20 && strlen(monPseudo) < 0 ){
-        printf("Veuillez donner un pseudo qui fait entre 1 et 20 caractères.\n");
-        saisieClavier(monPseudo);
+    if(argv[3] != NULL){
+        if(strlen(argv[3]) > 0 && strlen(argv[3]) < 20){
+            strcpy(monPseudo,argv[3]);
+        }
+        else{
+            fprintf(stderr,"%s:%s:%d: Veuillez donner un pseudo qui fait entre 1 et 20 caractères.\n",NOM_PRGRM,__FILE__,__LINE__);
+        }
+    }
+    else{
+        fprintf(stderr,"%s:%s:%d: Veuillez donner votre pseudo.\n",NOM_PRGRM,__FILE__,__LINE__);
+		exit(EXIT_FAILURE);
     }
     
     socket_locale = creerSocket(AF_INET,SOCK_STREAM,0);
@@ -147,11 +163,10 @@ int main(int argc, char** argv) {
 
    //signal(SIGINT,handler);  
 
-    while( terminaison ){
+    while( 1 ){
         messageEnvoie = malloc(sizeof(struct message));
         strcpy(messageEnvoie->pseudo,monPseudo);
-        //system("clear");
-        //printf("\nEntrez votre message -> ");
+        printf("\nEntrez votre message\n");
         saisieClavier(messageEnvoie->text);
         messageEnvoie->nbMessages = dernierMessage;
         

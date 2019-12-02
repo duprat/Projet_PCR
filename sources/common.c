@@ -294,10 +294,16 @@ void saisieClavier(char * string){
  *  affichage du message et de son envoyeur
  **/ 
 void affichageMessage(struct message * message){
-    for(int i = 0; message->pseudo[i] != ' ';i++){
+    printf("\033[35m");
+    for(int i = 0; i < 20 && message->pseudo[i] != ' ';i++){
         printf("%c",message->pseudo[i]);
     }
-    printf(" a dit: %s\n",message->text);
+    printf(":");
+    printf("\033[00m");
+    printf("\n");
+    printf("\033[33m");
+    printf("\t%s\n",message->text);
+    printf("\033[00m");
 }
 
 
