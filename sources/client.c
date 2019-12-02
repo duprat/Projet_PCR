@@ -93,17 +93,11 @@ int main(int argc, char** argv) {
     /**
     * Initialisation du pseudo du serveur
     **/
-    if(argv[3] != NULL){
-        if(strlen(argv[3]) > 0 && strlen(argv[3]) < 20){
-            strcpy(monPseudo,argv[3]);
-        }
-        else{
-            fprintf(stderr,"%s:%s:%d: Veuillez donner un pseudo qui fait entre 1 et 20 caractères.\n",NOM_PRGRM,__FILE__,__LINE__);
-        }
-    }
-    else{
-        fprintf(stderr,"%s:%s:%d: Veuillez donner votre pseudo.\n",NOM_PRGRM,__FILE__,__LINE__);
-		exit(EXIT_FAILURE);
+    printf("Entrez votre pseudo -> ");
+    saisieClavier(monPseudo);
+    while( strlen(monPseudo) > 20 && strlen(monPseudo) < 0 ){
+        printf("Veuillez donner un pseudo qui fait entre 1 et 20 caractères.\n");
+        saisieClavier(monPseudo);
     }
     
     socket_locale = creerSocket(AF_INET,SOCK_STREAM,0);
@@ -156,16 +150,15 @@ int main(int argc, char** argv) {
     while( terminaison ){
         messageEnvoie = malloc(sizeof(struct message));
         strcpy(messageEnvoie->pseudo,monPseudo);
-        printf("\nEntrez votre message -> ");
+        //system("clear");
+        //printf("\nEntrez votre message -> ");
         saisieClavier(messageEnvoie->text);
         messageEnvoie->nbMessages = dernierMessage;
         
         /**
         * Envoie d'un message
         **/
-       printf("salut\n");
         retourTCP = envoieTCP(socket_locale,(char*) messageEnvoie);
-        printf("aurevoir\n");
         
         free(messageEnvoie);
     }
