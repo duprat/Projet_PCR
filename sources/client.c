@@ -38,20 +38,6 @@ void * reception(void * param){
         /**
         *   Traitement du message recu
         **/
-        /*if(strcmp(ID,monID)==0){
-            printf("\nMon message \"%s\" a bien été enregistré.\n",messageRecu->text);
-            printf("\nEntrez votre message -> \n");
-        }
-        else{
-            printf("\n\033[34m════════════════════════ ✉ ════════════════════════\n");
-            printf("\033[00m");
-            affichageMessage(messageRecu);
-            printf("\033[34m════════════════════════ ✉ ════════════════════════");
-            printf("\033[00m");
-            printf("\nIl reste %d messages non lus.\n",(messageRecu->nbMessages - dernierMessage));
-            affichageMessage(messageRecu);
-            printf("\nEntrez votre message -> \n");
-        }*/
         
         if( dernierMessage > 50 ){
             for( int i = 0; i < dernierMessage-1; i++ ){
@@ -120,18 +106,16 @@ int main(int argc, char** argv) {
     /**
     * Initialisation du pseudo du serveur
     **/
-    if(argv[3] != NULL){
-        if(strlen(argv[3]) > 0 && strlen(argv[3]) < 20){
-            strcpy(monPseudo,argv[3]);
-        }
-        else{
-            fprintf(stderr,"%s:%s:%d: Veuillez donner un pseudo qui fait entre 1 et 20 caractères.\n",NOM_PRGRM,__FILE__,__LINE__);
-        }
+
+    printf("Veuillez entrez votre pseudo ->");
+    saisieClavier(monPseudo);
+    while(strlen(argv[3]) < 0 && strlen(argv[3]) > 20)
+    {
+       printf("Veuillez donner un pseudo qui fait entre 1 et 20 caractères.\n");
+       printf("Veuillez entrez votre pseudo ->");
+       saisieClavier(monPseudo);
     }
-    else{
-        fprintf(stderr,"%s:%s:%d: Veuillez donner votre pseudo.\n",NOM_PRGRM,__FILE__,__LINE__);
-		exit(EXIT_FAILURE);
-    }
+    
     
     socket_locale = creerSocket(AF_INET,SOCK_STREAM,0);
     
