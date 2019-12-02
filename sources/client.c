@@ -3,6 +3,7 @@
 int dernierMessage = 0;
 char monPseudo[N];
 char monID[N];
+int terminaison = 1;
 
 void * reception(void * param){
     struct message * messageRecu;
@@ -45,6 +46,11 @@ void * reception(void * param){
     pthread_exit(NULL);
 }
 
+void handler(int sig) 
+{ 
+    printf("Caught signal %d\n", sig);
+    terminaison = 0; 
+} 
 
 int main(int argc, char** argv) {
     
@@ -144,7 +150,10 @@ int main(int argc, char** argv) {
     /** 
     * Partie saisie et envoi d'un message
     **/
-    while(1){
+
+   //signal(SIGINT,handler);  
+
+    while( terminaison ){
         messageEnvoie = malloc(sizeof(struct message));
         strcpy(messageEnvoie->pseudo,monPseudo);
         printf("\nEntrez votre message -> ");
@@ -154,7 +163,9 @@ int main(int argc, char** argv) {
         /**
         * Envoie d'un message
         **/
+       printf("salut\n");
         retourTCP = envoieTCP(socket_locale,(char*) messageEnvoie);
+        printf("aurevoir\n");
         
         free(messageEnvoie);
     }
