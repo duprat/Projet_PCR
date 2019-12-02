@@ -109,7 +109,7 @@ int main(int argc, char** argv) {
 
     printf("Veuillez entrez votre pseudo ->");
     saisieClavier(monPseudo);
-    while(strlen(argv[3]) < 0 && strlen(argv[3]) > 20)
+    while(strlen(monPseudo) < 0 && strlen(monPseudo) > 20)
     {
        printf("Veuillez donner un pseudo qui fait entre 1 et 20 caractères.\n");
        printf("Veuillez entrez votre pseudo ->");
